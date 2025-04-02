@@ -1,31 +1,28 @@
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
-  name: {{ include "kv-single-vm.fullname" . }}
-  namespace: {{ .Values.vm.namespace }}
-  labels:
-    helm.sh/chart: {{ include "kv-single-vm.chart" . }}
+  name: ubuntu-desktop
 spec:
-  runStrategy: {{ .Values.vm.runStrategy }}
+  runStrategy: Manual
   dataVolumeTemplates:
   - apiVersion: cdi.kubevirt.io/v1beta1
     kind: DataVolume
     metadata:
-      name: {{ include "kv-single-vm.osdiskname" . }}
+      name: ubuntu-dv
     spec:
       pvc:
         accessModes:
         - ReadWriteOnce
         resources:
           requests:
-            storage: {{ .Values.image.disksize }}
+            storage: 30Gi
       source:
         http:
-          url: {{ .Values.image.repository }}
+          url: https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img
   template:
     metadata:
       labels:
-        kubevirt.io/domain: {{ include "kv-single-vm.fullname" . }}
+        kubevirt.io/domain: ubuntu-desktop
     spec:
       domain:
         devices:
@@ -45,18 +42,18 @@ spec:
             masquerade: {}
         resources:
           requests:
-            memory: {{ .Values.vm.resources.memory }}
-            cpu: {{ .Values.vm.resources.cpu }}
+            memory: 2048M
+            cpu: "2"
       networks:
       - name: default
         pod: {}
       volumes:
       - dataVolume:
-          name: {{ include "kv-single-vm.osdiskname" . }}
+          name: ubuntu-dv
         name: datavoldisk
       - name: longhorn-drive
         persistentVolumeClaim:
-          claimName: longhorn-vol-pvc
+          claimName: longhorn-volv-pvc
       - name: cloudinitdisk
         cloudInitNoCloud:
           userData: |
@@ -76,3 +73,17 @@ spec:
             runcmd:
               - systemctl enable xrdp
               - systemctl start xrdp
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ubuntu-desktop-rdp
+spec:
+  selector:
+    kubevirt.io/domain: ubuntu-desktop
+  ports:
+  - name: rdp
+    port: 3389
+    targetPort: 3389
+    protocol : TCP
+  type: ClusterIP

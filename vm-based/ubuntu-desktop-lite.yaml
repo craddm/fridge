@@ -1,0 +1,91 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: ubuntu-desktop-lite
+spec:
+  runStrategy: Manual
+  dataVolumeTemplates:
+  - apiVersion: cdi.kubevirt.io/v1beta1
+    kind: DataVolume
+    metadata:
+      name: ubuntu-lite-dv
+    spec:
+      pvc:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 40Gi
+      source:
+        http:
+          url: https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: ubuntu-desktop-lite
+    spec:
+      domain:
+        devices:
+          disks:
+          - disk:
+              bus: virtio
+            name: datavoldisk
+          - disk:
+              bus: virtio
+            name: cloudinitdisk
+          - disk:
+              bus: virtio
+            name: longhornery-drive
+            shareable: true
+          interfaces:
+          - name: default
+            masquerade: {}
+        resources:
+          requests:
+            memory: 2048M
+            cpu: "2"
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - dataVolume:
+          name: ubuntu-lite-dv
+        name: datavoldisk
+      - name: longhornery-drive
+        persistentVolumeClaim:
+          claimName: longhornery-drive
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            password: ubuntu
+            chpasswd: { expire: False }
+            ssh_pwauth: True
+            write_files:
+              - path: /etc/skel/.xsession
+                content: |
+                  xfce4-session
+            packages:
+              - nfs-common
+              - xfce4
+              - xfce4-goodies
+              - xrdp
+            runcmd:
+              - systemctl enable xrdp
+              - systemctl start xrdp
+     #         - mkdir -p /mnt/azure
+      #        - mount -t nfs nfs-server.default.svc.cluster.local:/exports /mnt/azure
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ubuntu-desktop-lite-rdp
+spec:
+  selector:
+    kubevirt.io/domain: ubuntu-desktop-lite
+  ports:
+  - name: rdp
+    port: 3389
+    targetPort: 3389
+    protocol : TCP
+  type: ClusterIP

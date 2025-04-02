@@ -4,7 +4,7 @@ An RDP service has been made available internally on port 3389.
 
 Use the following hostname when adding the VM connection to Guacamole:
 
-{{ include "kv-single-vm.fullname" . }}.{{ .Values.vm.namespace}}.svc.cluster.local
+{{ include "kv-single-vm.rdpname" . }}.{{ .Values.vm.namespace}}.svc.cluster.local
 
 By default, the VM is stopped.
 Running `virtctl start {{ include "kv-single-vm.fullname" . }}` will start the VM.
