@@ -1,0 +1,19 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: guacamole-allow-rdp
+  namespace: default
+spec:
+  endpointSelector:
+    matchLabels:
+      kubevirt.io: virt-handler
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            instance: guacamole
+            namespace: guac
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            instance: guacamole
+            namespace: guac
