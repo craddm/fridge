@@ -1,0 +1,11 @@
+guacamole:
+  settings:
+    OPENID_AUTHORIZATION_ENDPOINT: https://login.microsoftonline.com/<tenant-id>/oauth2/v2.0/authorize
+    OPENID_CLIENT_ID: <client-id>
+    OPENID_REDIRECT_URI: <your-domain-here>
+    OPENID_JWKS_ENDPOINT: https://login.microsoftonline.com/<tenant-id>/discovery/v2.0/keys
+    OPENID_ISSUER: https://login.microsoftonline.com/<tenant-id>/v2.0
+    OPENID_USERNAME_CLAIM_TYPE: preferred_username
+    OPENID_GROUPS_CLAIM_TYPE: groups
+    POSTGRESQL_AUTO_CREATE_ACCOUNTS: "true"
+    EXTENSION_PRIORITY: openid
