@@ -68,6 +68,7 @@ spec:
         - ports:
             - port: "443"
               protocol: TCP
+    # Allow CoreDNS autoscaler to communicate with the Azure DNS server
     - toCIDR:
         - 168.63.129.16/32
       toPorts:
@@ -153,6 +154,7 @@ spec:
         - ports:
             - port: "443"
               protocol: TCP
+    # Allow the autoscaler to communicate with the Azure DNS server
     - toCIDR:
         - 168.63.129.16/32
       toPorts:
