@@ -169,3 +169,7 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+infra/openstack/ai-fridge-dev-openrc.sh
+infra/openstack/Pulumi.open-dev.yaml
+.gitignore
+infra/openstack/Pulumi.yaml
