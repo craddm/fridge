@@ -170,6 +170,17 @@ api_server = components.ApiServer(
     ),
 )
 
+# Policy Agent
+policy_agent = components.PolicyAgent(
+    name=f"{stack_name}-policy-agent",
+    args=components.PolicyAgentArgs(
+        config=config,
+    ),
+    opts=ResourceOptions(
+        depends_on=[api_server],
+    ),
+)
+
 # Network policy (through Cilium)
 
 # Network policies should be deployed last to ensure that none of them interfere with the deployment process

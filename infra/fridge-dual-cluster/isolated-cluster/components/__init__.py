@@ -4,5 +4,6 @@ from .cert_manager import CertManager, CertManagerArgs
 from .minio_config import MinioConfigJob, MinioConfigArgs
 from .network_policies import NetworkPolicies
 from .object_storage import ObjectStorage, ObjectStorageArgs
+from .policy_agent import PolicyAgent, PolicyAgentArgs
 from .storage_classes import StorageClasses, StorageClassesArgs
 from .workflow_server import WorkflowServer, WorkflowServerArgs
