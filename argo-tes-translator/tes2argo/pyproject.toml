@@ -1,7 +1,7 @@
 [project]
 name = "tes2argo"
 version = "0.1.0"
-description = "Add your description here"
+description = "A translator from TES API to Argo Workflows"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -13,4 +13,5 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
+    "ruff>=0.14.11",
 ]
