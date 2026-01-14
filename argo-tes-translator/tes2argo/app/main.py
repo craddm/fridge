@@ -13,6 +13,12 @@ class TesTaskModel(BaseModel):
     executors: list = []
 
 
+class TesResourcesModel(BaseModel):
+    cpu_cores: int = 1
+    ram_gb: int = 4
+    disk_gb: int = 10
+
+
 def parse_tes_task(tes_task_json):
     """
     Parses a TES task JSON and extracts relevant information.
