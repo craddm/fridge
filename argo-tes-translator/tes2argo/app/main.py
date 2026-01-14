@@ -1,5 +1,17 @@
 import json
 
+from pydantic import BaseModel
+
+
+class TesTaskModel(BaseModel):
+    name: str
+    description: str = None
+    tags: list = []
+    inputs: list = []
+    outputs: list = []
+    resources: dict = {}
+    executors: list = []
+
 
 def parse_tes_task(tes_task_json):
     """
