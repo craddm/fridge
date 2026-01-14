@@ -1,22 +1,7 @@
 import json
 
 from pydantic import BaseModel
-
-
-class TesTaskModel(BaseModel):
-    name: str
-    description: str = None
-    tags: list = []
-    inputs: list = []
-    outputs: list = []
-    resources: dict = {}
-    executors: list = []
-
-
-class TesResourcesModel(BaseModel):
-    cpu_cores: int = 1
-    ram_gb: int = 4
-    disk_gb: int = 10
+from .model import TesExecutor, TesInput, TesOutput, TesResources, TesTask
 
 
 def parse_tes_task(tes_task_json):
