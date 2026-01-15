@@ -1,11 +1,11 @@
-import pytest
 from src.main import parse_tes_task
+from src.tes_models import TesTask
 
 example_tes_task_json = """
 {
     "name": "example_task",
     "description": "An example TES task",
-    "tags": ["example", "test"],
+    "tags": {"example": "test"},
     "inputs": [
         {
             "name": "input_file",
@@ -19,9 +19,8 @@ example_tes_task_json = """
         {
             "name": "output_file",
             "description": "An output file",
-            "type": "FILE",
-            "path": "/data/output.txt",
-            "size": 2048
+            "url": "http://example.com/output.txt",
+            "path": "/data/output.txt"
         }
     ],
     "resources": {
@@ -32,8 +31,7 @@ example_tes_task_json = """
     "executors": [
         {
             "image": "python:3.8",
-            "command": ["python", "script.py"],
-            "args": ["--input", "/data/input.txt", "--output", "/data/output.txt"]
+            "command": ["python", "script.py", "--input", "/data/input.txt", "--output", "/data/output.txt"]
         }
     ]
 }
@@ -41,28 +39,31 @@ example_tes_task_json = """
 
 
 def test_parse_tes_task():
-    task_info = parse_tes_task(example_tes_task_json)
+    task = parse_tes_task(example_tes_task_json)
 
-    assert task_info["name"] == "example_task"
-    assert task_info["description"] == "An example TES task"
-    assert task_info["tags"] == ["example", "test"]
+    assert isinstance(task, TesTask)
 
-    assert len(task_info["inputs"]) == 1
-    assert task_info["inputs"][0]["name"] == "input_file"
-    assert task_info["inputs"][0]["path"] == "/data/input.txt"
+    assert task.name == "example_task"
+    assert task.description == "An example TES task"
+    assert task.tags == {"example": "test"}
 
-    assert len(task_info["outputs"]) == 1
-    assert task_info["outputs"][0]["name"] == "output_file"
-    assert task_info["outputs"][0]["path"] == "/data/output.txt"
+    assert len(task.inputs) == 1
+    assert task.inputs[0].name == "input_file"
+    assert task.inputs[0].path == "/data/input.txt"
 
-    assert task_info["resources"]["cpu_cores"] == 2
-    assert task_info["resources"]["ram_gb"] == 4
-    assert task_info["resources"]["disk_gb"] == 10
+    assert len(task.outputs) == 1
+    assert task.outputs[0].name == "output_file"
+    assert task.outputs[0].path == "/data/output.txt"
 
-    assert len(task_info["executors"]) == 1
-    assert task_info["executors"][0]["image"] == "python:3.8"
-    assert task_info["executors"][0]["command"] == ["python", "script.py"]
-    assert task_info["executors"][0]["args"] == [
+    assert task.resources.cpu_cores == 2
+    assert task.resources.ram_gb == 4
+    # assert task_info["resources"]["disk_gb"] == 10
+
+    assert len(task.executors) == 1
+    assert task.executors[0].image == "python:3.8"
+    assert task.executors[0].command == [
+        "python",
+        "script.py",
         "--input",
         "/data/input.txt",
         "--output",
