@@ -27,7 +27,7 @@ def parse_tes_task(tes_task_json):
         inputs=task_inputs,
         outputs=task_outputs,
         resources=task_resources,
-        executors=task_executors,  # [TesExecutor(**executor) for executor in tes_task.get("executors")],
+        executors=task_executors,
     )
 
     return task
