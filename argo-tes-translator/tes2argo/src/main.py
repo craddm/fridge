@@ -1,7 +1,7 @@
 import json
 
 from pydantic import BaseModel
-from .model import TesExecutor, TesInput, TesOutput, TesResources, TesTask
+from .tes_models import TesExecutor, TesInput, TesOutput, TesResources, TesTask
 
 
 def parse_tes_task(tes_task_json):
