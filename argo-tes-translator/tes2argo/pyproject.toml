@@ -5,6 +5,7 @@ description = "A translator from TES API to Argo Workflows"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "datamodel-code-generator>=0.53.0",
     "fastapi>=0.128.0",
     "pydantic>=2.12.5",
     "requests>=2.32.5",
@@ -15,3 +16,11 @@ dev = [
     "pytest>=9.0.2",
     "ruff>=0.14.11",
 ]
+
+[tool.pytest.ini_options]
+addopts = ["-vvv"]
+
+[tool.datamodel-codegen]
+url = "https://raw.githubusercontent.com/ga4gh/task-execution-schemas/refs/heads/develop/openapi/task_execution_service.openapi.yaml"
+output = "src/tes_models.py"
+output-model-type = "pydantic_v2.BaseModel"
