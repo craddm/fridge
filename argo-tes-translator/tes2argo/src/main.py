@@ -1,6 +1,5 @@
 import json
 
-from pydantic import BaseModel
 from .tes_models import TesExecutor, TesInput, TesOutput, TesResources, TesTask
 
 
@@ -14,15 +13,21 @@ def parse_tes_task(tes_task_json):
         dict: A dictionary containing extracted information.
     """
     tes_task = json.loads(tes_task_json)
+    task_inputs = [TesInput(**x) for x in tes_task.get("inputs", [])]
+    task_outputs = [TesOutput(**output) for output in tes_task.get("outputs", [])]
+    task_resources = TesResources(**tes_task.get("resources", {}))
+    task_executors = [
+        TesExecutor(**executor) for executor in tes_task.get("executors", [])
+    ]
 
-    task_info = {
-        "name": tes_task.get("name"),
-        "description": tes_task.get("description"),
-        "tags": tes_task.get("tags", []),
-        "inputs": tes_task.get("inputs", []),
-        "outputs": tes_task.get("outputs", []),
-        "resources": tes_task.get("resources", {}),
-        "executors": tes_task.get("executors", []),
-    }
+    task = TesTask(
+        name=tes_task.get("name"),
+        description=tes_task.get("description"),
+        tags=tes_task.get("tags", []),
+        inputs=task_inputs,
+        outputs=task_outputs,
+        resources=task_resources,
+        executors=task_executors,  # [TesExecutor(**executor) for executor in tes_task.get("executors")],
+    )
 
-    return task_info
+    return task
