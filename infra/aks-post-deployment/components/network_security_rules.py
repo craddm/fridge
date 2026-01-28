@@ -29,8 +29,10 @@ class NetworkSecurityRules(ComponentResource):
         child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
 
         access_nodes_subnet_cidr = args.stack_outputs.access_nodes_subnet_cidr
+        access_vnet_cidr = args.stack_outputs.access_vnet_cidr
         isolated_nodes_subnet_cidr = args.stack_outputs.isolated_nodes_subnet_cidr
         isolated_cluster_k8s_api_ip = args.stack_outputs.isolated_cluster_api_server_ip
+        isolated_vnet_cidr = args.stack_outputs.isolated_vnet_cidr
         fridge_api_ip = args.stack_outputs.fridge_api_ip
 
         access_cluster_nsg_rules = [
@@ -85,14 +87,14 @@ class NetworkSecurityRules(ComponentResource):
                 description="Allow Harbor access from Isolated cluster",
             ),
             network.SecurityRuleArgs(
-                name="DenyIsolatedClusterInBound",
+                name="DenyIsolatedClusterInbound",
                 priority=1000,
                 direction=network.SecurityRuleDirection.INBOUND,
                 access=network.SecurityRuleAccess.DENY,
                 protocol=network.SecurityRuleProtocol.ASTERISK,
                 source_port_range="*",
                 destination_port_range="*",
-                source_address_prefix=isolated_nodes_subnet_cidr,
+                source_address_prefix=isolated_vnet_cidr,
                 destination_address_prefix="*",
                 description="Deny all other inbound from Isolated cluster",
             ),
@@ -137,7 +139,7 @@ class NetworkSecurityRules(ComponentResource):
                 source_port_range="*",
                 destination_port_range="*",
                 source_address_prefix="*",
-                destination_address_prefix=isolated_nodes_subnet_cidr,
+                destination_address_prefix=isolated_vnet_cidr,
                 description="Deny all other outbound to Isolated cluster",
             ),
         ]
@@ -175,7 +177,7 @@ class NetworkSecurityRules(ComponentResource):
                 protocol=network.SecurityRuleProtocol.ASTERISK,
                 source_port_range="*",
                 destination_port_range="*",
-                source_address_prefix=args.stack_outputs.access_nodes_subnet_cidr,
+                source_address_prefix=access_vnet_cidr,
                 destination_address_prefix="*",
                 description="Deny all other traffic from access cluster VNet",
             ),
@@ -215,7 +217,7 @@ class NetworkSecurityRules(ComponentResource):
                 source_port_range="*",
                 destination_port_range="*",
                 source_address_prefix="*",
-                destination_address_prefix=access_nodes_subnet_cidr,
+                destination_address_prefix=access_vnet_cidr,
                 description="Deny all other outbound to access cluster",
             ),
             network.SecurityRuleArgs(
