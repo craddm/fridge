@@ -45,6 +45,7 @@ class StackOutputs(ComponentResource):
         self.access_subnet_nsg = self.infrastructure_stack.get_output(
             "access_subnet_nsg"
         )
+        self.access_vnet_cidr = self.infrastructure_stack.get_output("access_vnet_cidr")
         self.fridge_api_ip = self.isolated_stack.get_output("fridge_api_ip")
         self.harbor_ip_address = self.access_stack.get_output("harbor_ip_address")
         self.isolated_cluster_api_server_ip = self.infrastructure_stack.get_output(
@@ -55,4 +56,7 @@ class StackOutputs(ComponentResource):
         )
         self.isolated_subnet_nsg = self.infrastructure_stack.get_output(
             "isolated_subnet_nsg"
+        )
+        self.isolated_vnet_cidr = self.infrastructure_stack.get_output(
+            "isolated_vnet_cidr"
         )
