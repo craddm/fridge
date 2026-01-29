@@ -286,6 +286,12 @@ class ApiServer(ComponentResource):
             else {}
         )
 
+        load_balancer_ip = (
+            "10.20.0.161"
+            if K8sEnvironment(args.config.get("k8s_env")) == K8sEnvironment.DAWN
+            else None
+        )
+
         self.api_service = Service(
             "fridge-api-service",
             metadata=ObjectMetaArgs(
@@ -304,6 +310,7 @@ class ApiServer(ComponentResource):
                         target_port=8000,
                     )
                 ],
+                load_balancer_ip=load_balancer_ip,
             ),
             opts=child_opts,
         )
