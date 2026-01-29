@@ -120,23 +120,27 @@ spec:
               protocol: ANY
           rules:
             dns:
+              - matchPattern: "cdn*.quay.io"
               - matchName: "docker-images-prod.6aa30f8b08e16409b46e0173d6de2f56.r2.cloudflarestorage.com"
               - matchName: "ghcr.io"
               - matchName: "hub.docker.com"
-              - matchName: "registry-1.docker.io"
               - matchName: "pkg-containers.githubusercontent.com"
               - matchName: "production.cloudflare.docker.com"
               - matchName: "quay.io"
-              - matchPattern: "cdn*.quay.io"
+              - matchName: "registry-1.docker.io"
+              - matchName: "registry.k8s.io"
+              - matchPattern: "*.pkg.dev"
     - toFQDNs:
       - matchName: "docker-images-prod.6aa30f8b08e16409b46e0173d6de2f56.r2.cloudflarestorage.com"
       - matchName: "ghcr.io"
       - matchName: "hub.docker.com"
-      - matchName: "registry-1.docker.io"
       - matchName: "pkg-containers.githubusercontent.com"
       - matchName: "production.cloudflare.docker.com"
       - matchPattern: "cdn*.quay.io"
       - matchName: "quay.io"
+      - matchName: "registry-1.docker.io"
+      - matchName: "registry.k8s.io"
+      - matchPattern: "*.pkg.dev"
 ---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
