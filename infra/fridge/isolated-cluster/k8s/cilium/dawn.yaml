@@ -175,6 +175,8 @@ spec:
         - ports:
             - port: "9501"
               protocol: TCP
+            - port: "9502"
+              protocol: TCP
 ---
 apiVersion: "cilium.io/v2"
 kind: CiliumNetworkPolicy
@@ -191,6 +193,8 @@ spec:
       toPorts:
         - ports:
             - port: "3260"
+              protocol: TCP
+            - port: "2049"
               protocol: TCP
 ---
 apiVersion: "cilium.io/v2"
@@ -319,3 +323,19 @@ spec:
         - ports:
             - port: "4444"
               protocol: TCP
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: argo-server-dawn
+  namespace: argo-server
+spec:
+  endpointSelector:
+    matchLabels:
+      app: server
+  ingress:
+    - fromEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "2746"
