@@ -281,6 +281,18 @@ class NetworkSecurityRules(ComponentResource):
                 destination_port_range="445",
             ),
             network.SecurityRuleArgs(
+                name="AllowAccessToInternet443Outbound",
+                priority=300,
+                direction=network.SecurityRuleDirection.OUTBOUND,
+                access=network.SecurityRuleAccess.ALLOW,
+                protocol=network.SecurityRuleProtocol.TCP,
+                source_address_prefix=isolated_nodes_subnet_cidr,
+                destination_address_prefix="Internet",
+                source_port_range="*",
+                destination_port_range="443",
+                description="Allow nodes to access Internet on port 443 for updates and external APIs",
+            ),
+            network.SecurityRuleArgs(
                 name="DenyAccessClusterOutBound",
                 priority=3900,
                 direction=network.SecurityRuleDirection.OUTBOUND,
