@@ -99,7 +99,7 @@ metadata:
   name: harbor-allow-egress-to-registries
   namespace: harbor
 spec:
-  # Allow the core component of Harbor to reach the Docker, GCHR and Quay registries
+  # Allow the core component of Harbor to reach the Docker, GCHR, Quay, and k8s.io registries
   # See:
   #   - https://docs.docker.com/desktop/setup/allow-list/
   #   - https://access.redhat.com/articles/7084334 (regarding Quay)
@@ -120,6 +120,7 @@ spec:
               protocol: ANY
           rules:
             dns:
+              - matchName: "auth.docker.io"
               - matchName: "docker-images-prod.6aa30f8b08e16409b46e0173d6de2f56.r2.cloudflarestorage.com"
               - matchName: "hub.docker.com"
               - matchName: "production.cloudflare.docker.com"
@@ -131,6 +132,7 @@ spec:
               - matchName: "registry.k8s.io"
               - matchPattern: "*.pkg.dev"
     - toFQDNs:
+      - matchName: "auth.docker.io"
       - matchName: "docker-images-prod.6aa30f8b08e16409b46e0173d6de2f56.r2.cloudflarestorage.com"
       - matchName: "hub.docker.com"
       - matchName: "production.cloudflare.docker.com"
