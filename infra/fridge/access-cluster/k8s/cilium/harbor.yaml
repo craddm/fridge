@@ -131,6 +131,7 @@ spec:
               - matchPattern: "cdn*.quay.io"
               - matchName: "registry.k8s.io"
               - matchPattern: "*.pkg.dev"
+              - matchName: "prod-registry-k8s-io-eu-west-1.s3.dualstack.eu-west-1.amazonaws.com"
     - toFQDNs:
       - matchName: "auth.docker.io"
       - matchName: "docker-images-prod.6aa30f8b08e16409b46e0173d6de2f56.r2.cloudflarestorage.com"
@@ -143,6 +144,7 @@ spec:
       - matchName: "quay.io"
       - matchName: "registry.k8s.io"
       - matchPattern: "*.pkg.dev"
+      - matchName: "prod-registry-k8s-io-eu-west-1.s3.dualstack.eu-west-1.amazonaws.com"
 ---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
