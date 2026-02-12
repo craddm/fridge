@@ -142,6 +142,9 @@ spec:
       - matchName: "pkg-containers.githubusercontent.com"
       - matchPattern: "cdn*.quay.io"
       - matchName: "quay.io"
+      # registry.k8s.io forwards to many different potential endpoints, depending on factors such as region and load
+      # We need to allow those endpoints too. However, there is no list of known registry.k8s.io endpoints,
+      # and they can change over time. Points below are some known endpoints observered in our environment
       - matchName: "registry.k8s.io"
       - matchPattern: "*.pkg.dev"
       - matchName: "prod-registry-k8s-io-eu-west-1.s3.dualstack.eu-west-1.amazonaws.com"
