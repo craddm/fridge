@@ -1,6 +1,7 @@
 from .api_server import ApiServer, ApiServerArgs
 from .block_storage import BlockStorage, BlockStorageArgs
 from .cert_manager import CertManager, CertManagerArgs
+from .container_runtime import ContainerRuntimeConfig, ContainerRuntimeConfigArgs
 from .minio_config import MinioConfigJob, MinioConfigArgs
 from .monitoring import Monitoring, MonitoringArgs
 from .network_policies import NetworkPolicies
