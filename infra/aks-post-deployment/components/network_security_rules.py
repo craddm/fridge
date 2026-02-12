@@ -268,6 +268,8 @@ class NetworkSecurityRules(ComponentResource):
                 source_port_range="*",
                 destination_port_range="445",
             ),
+            # Allow outbound access to Internet on port 443 for updates and external APIs, but only from the nodes subnet (not the whole cluster subnet) to limit blast radius in case of misconfiguration
+            # This is currently required for node bootstrapping. To be addressed for prod.
             network.SecurityRuleArgs(
                 name="AllowAccessToInternet443Outbound",
                 priority=300,
