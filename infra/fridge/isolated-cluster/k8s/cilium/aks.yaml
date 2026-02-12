@@ -115,6 +115,8 @@ spec:
         - ports:
             - port: "8082"
               protocol: TCP
+    - fromEntities:
+        - remote-node
 ---
 apiVersion: "cilium.io/v2"
 kind: CiliumNetworkPolicy
@@ -163,3 +165,20 @@ spec:
         - ports:
             - port: "10250"
               protocol: TCP
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: fridge-api-aks
+  namespace: fridge-api
+spec:
+  endpointSelector:
+    matchLabels:
+      app: fridge-api
+  ingress: #Allow incoming traffic to the fridge-api from the Azure Load Balancer
+    - fromCIDR:
+      - 168.63.129.16/32
+      toPorts:
+        - ports:
+          - port: "8000"
+            protocol: TCP
