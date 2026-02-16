@@ -43,7 +43,7 @@ class Monitoring(ComponentResource):
                     "monitoring-operator",
                     ReleaseArgs(
                         chart="kube-prometheus-stack",
-                        version="75.15.1",
+                        version="81.6.3",
                         repository_opts={
                             "repo": "https://prometheus-community.github.io/helm-charts"
                         },
@@ -102,7 +102,7 @@ class Monitoring(ComponentResource):
                     "monitoring-operator",
                     ReleaseArgs(
                         chart="kube-prometheus-stack",
-                        version="75.15.1",
+                        version="81.6.3",
                         repository_opts={
                             "repo": "https://prometheus-community.github.io/helm-charts"
                         },
@@ -144,12 +144,11 @@ class Monitoring(ComponentResource):
                     ),
                     opts=child_opts,
                 )
-
                 grafana_loki = Release(
                     "grafana-loki",
                     ReleaseArgs(
                         chart="loki-stack",
-                        version="2.10.2",
+                        version="6.53.0",
                         repository_opts={
                             "repo": "https://grafana.github.io/helm-charts"
                         },
