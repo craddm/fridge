@@ -1,3 +1,4 @@
+import pulumi
 from pulumi import ComponentResource, ResourceOptions
 from pulumi_kubernetes.core.v1 import (
     Namespace,
@@ -7,13 +8,14 @@ from pulumi_kubernetes.core.v1 import (
 )
 from pulumi_kubernetes.helm.v3 import Release, ReleaseArgs
 from pulumi_kubernetes.meta.v1 import ObjectMetaArgs
-from pulumi_kubernetes.yaml import ConfigFile
+
 
 from enums import K8sEnvironment
 
 
 class MonitoringArgs:
-    def __init__(self, k8s_environment: K8sEnvironment):
+    def __init__(self, config: pulumi.config.Config, k8s_environment: K8sEnvironment):
+        self.config = config
         self.k8s_environment = k8s_environment
 
 
@@ -42,7 +44,7 @@ class Monitoring(ComponentResource):
                     "monitoring-operator",
                     ReleaseArgs(
                         chart="kube-prometheus-stack",
-                        version="81.6.3",
+                        version="82.0.0",
                         repository_opts={
                             "repo": "https://prometheus-community.github.io/helm-charts"
                         },
@@ -62,8 +64,50 @@ class Monitoring(ComponentResource):
                         },
                         namespace=monitoring_ns.metadata.name,
                         create_namespace=False,
+                        values={
+                            "deploymentMode": "SingleBinary",
+                            "loki": {
+                                "auth_enabled": False,
+                                "commonConfig": {
+                                    "replication_factor": 1,
+                                },
+                                "singleBinary": {
+                                    "replicas": 1,
+                                    "resources": {
+                                        "requests": {"cpu": "500m", "memory": "512Mi"}
+                                    },
+                                    "persistence": {
+                                        "enabled": True,
+                                        "size": "10Gi",
+                                        "storageClassName": "default",
+                                    },
+                                },
+                                "storage": {
+                                    "type": "azure",
+                                    "azure": {
+                                        "connectionString": args.config.require(
+                                            "azure_storage_connection_string"
+                                        ),
+                                    },
+                                    "bucketNames": {
+                                        "chunks": "loki-chunks",
+                                        "ruler": "loki-ruler",
+                                    },
+                                },
+                                "useTestSchema": True,
+                            },
+                            "chunksCache": {
+                                "enabled": False,
+                            },
+                            "resultsCache": {
+                                "enabled": False,
+                            },
+                        },
                     ),
-                    opts=child_opts,
+                    opts=ResourceOptions.merge(
+                        child_opts,
+                        ResourceOptions(depends_on=[prometheus_operator]),
+                    ),
                 )
             case K8sEnvironment.DAWN:
                 # The namespace is already created on Dawn
