@@ -150,14 +150,6 @@ spec:
         - ports:
             - port: "10250"
               protocol: TCP
-    # must allow readiness probe from host
-    # only necessary after lockdown?
-    - fromEntities:
-        - host
-      toPorts:
-        - ports:
-            - port: "9403"
-              protocol: TCP
 ---
 apiVersion: "cilium.io/v2"
 kind: CiliumNetworkPolicy
