@@ -268,40 +268,6 @@ spec:
 apiVersion: "cilium.io/v2"
 kind: CiliumNetworkPolicy
 metadata:
-  name: csi-cinder-controllerplugin
-  namespace: kube-system
-spec:
-  endpointSelector:
-    matchLabels:
-      app: csi-cinder-controllerplugin
-  egress:
-    - toEndpoints:
-        - matchLabels:
-            io.kubernetes.pod.namespace: kube-system
-            k8s-app: kube-dns
-      toPorts:
-        - ports:
-            - port: "53"
-              protocol: ANY
-          rules:
-            dns:
-              - matchName: "arcus.openstack.hpc.cam.ac.uk"
-    - toEntities:
-        - kube-apiserver
-      toPorts:
-        - ports:
-          - port: "6443"
-            protocol: ANY
-    - toFQDNs:
-        - matchName: arcus.openstack.hpc.cam.ac.uk
-      toPorts:
-        - ports:
-            - port: "5000"
-              protocol: ANY
----
-apiVersion: "cilium.io/v2"
-kind: CiliumNetworkPolicy
-metadata:
   name: argo-artifacts-dawn
   namespace: argo-artifacts
 spec:
