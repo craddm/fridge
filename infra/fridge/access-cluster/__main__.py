@@ -120,6 +120,7 @@ network_policies = components.NetworkPolicies(
     name=f"{stack_name}-network-policies",
     config=config,
     k8s_environment=k8s_environment,
+    harbor_fqdn=harbor.harbor_fqdn,
     opts=ResourceOptions(
         depends_on=resources,
     ),
