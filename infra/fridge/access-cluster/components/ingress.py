@@ -72,14 +72,19 @@ class Ingress(ComponentResource):
                     ingress_nginx.status.name,
                     "-controller",
                 )
+                ingress_service = Service.get(
+                    "ingress-nginx-controller-service",
+                    controller_name,
+                )
+
+                self.ingress_ip = ingress_service.status.load_balancer.ingress[0].ip
+                self.ingress_ports = ingress_service.spec.ports.apply(
+                    lambda ports: [item.port for item in ports]
+                )
+
             case K8sEnvironment.DAWN:
                 # Dawn specific configuration
                 ingress_nginx_ns = Namespace.get("ingress-nginx-ns", "ingress-nginx")
-                # ingress_nginx = Release.get("ingress-nginx", "ingress-nginx")
-                controller_name = Output.concat(
-                    ingress_nginx_ns.metadata.name,
-                    "/ingress-nginx-controller",
-                )
                 ingress_nginx = Service.get(
                     "ingress-nginx",
                     Output.concat(
@@ -91,16 +96,6 @@ class Ingress(ComponentResource):
                         ResourceOptions(depends_on=ingress_nginx_ns),
                     ),
                 )
-
-        ingress_service = Service.get(
-            "ingress-nginx-controller-service",
-            controller_name,
-        )
-
-        # self.ingress_ip = ingress_service.status.load_balancer.ingress[0].ip
-        # self.ingress_ports = ingress_service.spec.ports.apply(
-        #     lambda ports: [item.port for item in ports]
-        # )
 
         self.register_outputs(
             {"ingress_nginx_ns": ingress_nginx_ns, "ingress_nginx": ingress_nginx}
