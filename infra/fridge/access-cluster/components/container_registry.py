@@ -54,6 +54,8 @@ class ContainerRegistry(ComponentResource):
         super().__init__("fridge:ContainerRegistry", name, {}, opts)
         child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
 
+        k8s_environment = K8sEnvironment(args.config.get("k8s_env"))
+
         self.harbor_ns = Namespace(
             "harbor-ns",
             metadata=ObjectMetaArgs(
@@ -78,14 +80,32 @@ class ContainerRegistry(ComponentResource):
             else "ReadWriteOnce",
         }
 
-        api_service_annotations = (
-            {
-                "service.beta.kubernetes.io/azure-load-balancer-internal": "true",
-                "service.beta.kubernetes.io/azure-load-balancer-internal-subnet": "networking-access-nodes",
-            }
-            if K8sEnvironment(args.config.get("k8s_env")) == K8sEnvironment.AKS
-            else {}
-        )
+        match k8s_environment:
+            case K8sEnvironment.AKS:
+                harbor_expose_values = (
+                    {
+                        "type": "loadBalancer",
+                        "loadBalancer": {
+                            "annotations": {
+                                "service.beta.kubernetes.io/azure-load-balancer-internal": "true",
+                                "service.beta.kubernetes.io/azure-load-balancer-internal-subnet": "networking-access-nodes",
+                            }
+                        },
+                        "tls": {
+                            "enabled": False,
+                            "certSource": "none",
+                        },
+                    },
+                )
+
+            case K8sEnvironment.DAWN:
+                harbor_expose_values = {
+                    "type": "clusterIP",
+                    "tls": {
+                        "enabled": False,
+                        "certSource": "none",
+                    },
+                }
 
         self.harbor = Release(
             "harbor",
@@ -97,14 +117,7 @@ class ContainerRegistry(ComponentResource):
                     repo="https://helm.goharbor.io",
                 ),
                 values={
-                    "expose": {
-                        "type": "loadBalancer",
-                        "loadBalancer": {"annotations": api_service_annotations},
-                        "tls": {
-                            "enabled": False,
-                            "certSource": "none",
-                        },
-                    },
+                    "expose": harbor_expose_values,
                     "externalURL": self.harbor_external_url,
                     "harborAdminPassword": args.config.require_secret(
                         "harbor_admin_password"
@@ -180,8 +193,9 @@ class ContainerRegistry(ComponentResource):
             ),
         )
 
-        self.harbor_internal_loadbalancer = Service.get(
-            "harbor-internal-lb",
+        # Get the Harbor service for both AKS and DAWN environments
+        self.harbor_service = Service.get(
+            "harbor-service",
             id=pulumi.Output.concat(self.harbor_ns.metadata.name, "/harbor"),
             opts=ResourceOptions.merge(
                 child_opts,
@@ -193,12 +207,18 @@ class ContainerRegistry(ComponentResource):
             ),
         )
 
-        # Extract the dynamically assigned IP address
-        self.harbor_lb_ip = self.harbor_internal_loadbalancer.status.apply(
-            lambda status: status.load_balancer.ingress[0].ip
-            if status and status.load_balancer and status.load_balancer.ingress
-            else None
-        )
+        if k8s_environment == K8sEnvironment.AKS:
+            # Extract the dynamically assigned LoadBalancer IP address
+            self.harbor_ip = self.harbor_service.status.apply(
+                lambda status: status.load_balancer.ingress[0].ip
+                if status and status.load_balancer and status.load_balancer.ingress
+                else None
+            )
+        elif k8s_environment == K8sEnvironment.DAWN:
+            # Extract the ClusterIP for DAWN environment
+            self.harbor_ip = self.harbor_service.spec.apply(
+                lambda spec: spec.cluster_ip if spec else None
+            )
 
         # Create a daemonset to skip TLS verification for the harbor registry
         # This is needed while using staging/self-signed certificates for Harbor
