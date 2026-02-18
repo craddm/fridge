@@ -65,10 +65,10 @@ spec:
       k8s:app.kubernetes.io/component: controller
   ingress:
     - fromEntities:
-        - remote-node
+        - world
       toPorts:
         - ports:
-            - port: "8443"
+            - port: "10254"
               protocol: TCP
 ---
 apiVersion: "cilium.io/v2"
@@ -112,11 +112,17 @@ spec:
       app: webhook
   ingress:
     - fromEntities:
-        - remote-node
+        - world
       toPorts:
         - ports:
-            - port: "10250"
+            - port: "6080"
               protocol: TCP
+    # - fromEntities:
+    #     - remote-node
+    #   toPorts:
+    #     - ports:
+    #         - port: "10250"
+    #           protocol: TCP
 ---
 apiVersion: "cilium.io/v2"
 kind: CiliumNetworkPolicy
@@ -231,4 +237,61 @@ spec:
       toPorts:
         - ports:
             - port: "8080"
+              protocol: TCP
+            - port: "5000"
+              protocol: TCP
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: harbor-dawn-redis
+  namespace: harbor
+spec:
+  endpointSelector:
+    matchLabels:
+      app: harbor
+      component: redis
+  ingress:
+    - fromEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "6379"
+              protocol: TCP
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: harbor-dawn-coredns
+  namespace: harbor
+spec:
+  endpointSelector:
+    matchLabels:
+      app: harbor
+      component: core
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s-app: kube-dns
+            k8s:io.kubernetes.pod.namespace: kube-system
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: local-path-provisioner
+  namespace: kube-system
+spec:
+  endpointSelector:
+    matchLabels:
+      app: local-path-provisioner
+  egress:
+    - toEntities:
+        - host
+      toPorts:
+        - ports:
+            - port: "6443"
               protocol: TCP
