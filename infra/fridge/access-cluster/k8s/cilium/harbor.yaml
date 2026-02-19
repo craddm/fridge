@@ -91,6 +91,13 @@ spec:
         - ports:
           - port: "8080"
             protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            job-name: harbor-config-job
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
 ---
 apiVersion: "cilium.io/v2"
 kind: CiliumNetworkPolicy
@@ -188,3 +195,23 @@ spec:
         - ports:
           - port: "443"
             protocol: TCP
+---
+# Always allow config job to contact core
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: harbor-config-job-egress
+  namespace: harbor
+spec:
+  endpointSelector:
+    matchLabels:
+      job-name: harbor-config-job
+  egress:
+    - toEndpoints:
+      - matchLabels:
+          k8s:app.kubernetes.io/name: harbor
+          component: nginx
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
