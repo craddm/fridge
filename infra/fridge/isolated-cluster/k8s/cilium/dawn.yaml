@@ -16,6 +16,12 @@ spec:
               protocol: TCP
             - port: "8181"
               protocol: TCP
+    - fromEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
   egress:
     # Allow kube-dns to communicate with the local DAWN DNS servers
     - toCIDR:
@@ -23,6 +29,12 @@ spec:
         - 192.168.3.3/32
         - 131.111.12.20/32
         - 131.111.8.42/32
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+    - toEntities:
+        - world
       toPorts:
         - ports:
             - port: "53"
@@ -297,3 +309,27 @@ spec:
       toPorts:
         - ports:
             - port: "2746"
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: fridge-api-dawn
+  namespace: fridge-api
+spec:
+  endpointSelector:
+    matchLabels:
+      app: fridge-api-server
+  ingress:
+    - fromEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "8000"
+              protocol: TCP
+  egress:
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
