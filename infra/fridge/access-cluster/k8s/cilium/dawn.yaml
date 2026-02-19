@@ -37,24 +37,6 @@ spec:
 apiVersion: "cilium.io/v2"
 kind: CiliumNetworkPolicy
 metadata:
-  name: allow-etcd-jobs
-  namespace: kube-system
-spec:
-  endpointSelector:
-    matchLabels:
-      etcd-defrag: "true"
-  egress:
-    - toEntities:
-        - kube-apiserver
-      # Since this is on Dawn, we can be specific about the port
-      toPorts:
-        - ports:
-            - port: "6443"
-              protocol: ANY
----
-apiVersion: "cilium.io/v2"
-kind: CiliumNetworkPolicy
-metadata:
   name: webhook-ingress-nginx
   namespace: ingress-nginx
   # Allow traffic from the remote-node entity on port 8443. This is webhook related traffic
@@ -116,6 +98,12 @@ spec:
       toPorts:
         - ports:
             - port: "6080"
+              protocol: TCP
+    - fromCIDR:
+        - 10.42.0.0/16
+      toPorts:
+        - ports:
+            - port: "10250"
               protocol: TCP
     # - fromEntities:
     #     - remote-node
