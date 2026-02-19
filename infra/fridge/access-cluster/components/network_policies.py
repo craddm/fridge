@@ -116,8 +116,10 @@ class NetworkPolicies(ComponentResource):
                         "toPorts": [{"ports": [{"port": "2222", "protocol": "TCP"}]}],
                     },
                     {
-                        "toCIDR": [config.require("fridge_api_ip_address")],
-                        "toPorts": [{"ports": [{"port": "443", "protocol": "TCP"}]}],
+                        "toCIDR": [
+                            "10.20.0.0/16"
+                        ],  # [config.require("fridge_api_ip_address")],
+                        "toPorts": [{"ports": [{"port": "30180", "protocol": "TCP"}]}],
                     },
                     k8s_api_endpoint_rule,
                 ],
