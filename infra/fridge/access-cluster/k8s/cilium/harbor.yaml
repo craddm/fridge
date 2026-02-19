@@ -6,7 +6,6 @@ metadata:
 spec:
   # Apply to all pods in this namespace
   endpointSelector: {}
-  # Deny all ingress by default
   ingress:
     - {}
   egress:
@@ -128,6 +127,7 @@ spec:
               - matchName: "production.cloudflare.docker.com"
               - matchName: "quay.io"
               - matchPattern: "cdn*.quay.io"
+              - matchPattern: "**.cluster.local"
     - toFQDNs:
       - matchName: "docker-images-prod.6aa30f8b08e16409b46e0173d6de2f56.r2.cloudflarestorage.com"
       - matchName: "ghcr.io"
@@ -137,6 +137,7 @@ spec:
       - matchName: "production.cloudflare.docker.com"
       - matchPattern: "cdn*.quay.io"
       - matchName: "quay.io"
+      - matchPattern: "**.cluster.local"
 ---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
