@@ -187,6 +187,20 @@ api_server = components.ApiServer(
     ),
 )
 
+# DNS configuration: writes harbor FQDN -> internal IP into /etc/hosts on each node
+# so that containerd can resolve harbor for image pulls.
+if k8s_environment == K8sEnvironment.DAWN:
+    dns_config = components.DNSConfig(
+        "dns-config",
+        args=components.DNSConfigArgs(
+            harbor_fqdn=access_stack.get_output("harbor_fqdn"),
+            harbor_ip=access_stack.get_output("harbor_ip_address"),
+        ),
+        opts=ResourceOptions(
+            depends_on=[api_server],
+        ),
+    )
+
 # Network policy (through Cilium)
 # Network policies should be deployed last to ensure that none of them interfere with the deployment process
 resources = [
