@@ -194,7 +194,7 @@ if k8s_environment == K8sEnvironment.DAWN:
         "dns-config",
         args=components.DNSConfigArgs(
             harbor_fqdn=access_stack.get_output("harbor_fqdn"),
-            harbor_ip=access_stack.get_output("harbor_ip_address"),
+            harbor_ip=config.require("access_cluster_load_balancer_ip"),
         ),
         opts=ResourceOptions(
             depends_on=[api_server],
