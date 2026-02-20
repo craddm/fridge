@@ -52,6 +52,8 @@ spec:
         - ports:
             - port: "10254"
               protocol: TCP
+            - port: "8443"
+              protocol: TCP
 ---
 apiVersion: "cilium.io/v2"
 kind: CiliumNetworkPolicy
@@ -99,18 +101,8 @@ spec:
         - ports:
             - port: "6080"
               protocol: TCP
-    - fromCIDR:
-        - 10.42.0.0/16
-      toPorts:
-        - ports:
             - port: "10250"
               protocol: TCP
-    # - fromEntities:
-    #     - remote-node
-    #   toPorts:
-    #     - ports:
-    #         - port: "10250"
-    #           protocol: TCP
 ---
 apiVersion: "cilium.io/v2"
 kind: CiliumNetworkPolicy
