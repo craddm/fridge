@@ -52,7 +52,7 @@ class DNSConfig(ComponentResource):
             lambda args: Template(yaml_template).substitute(
                 namespace=args["namespace"],
                 harbor_fqdn=args["harbor_fqdn"],
-                harbor_ip="10.42.0.87",  # args["harbor_ip"],
+                harbor_ip=args["harbor_ip"],
             )
         )
 
