@@ -105,8 +105,8 @@ class FridgeAPIJumpbox(ComponentResource):
                                     EnvVarArgs(name="PGID", value="1000"),
                                     EnvVarArgs(name="PASSWORD_ACCESS", value="false"),
                                     EnvVarArgs(
-                                        name="PUBLIC_KEY_FILE",
-                                        value="/pubkey/authorized_keys",
+                                        name="PUBLIC_KEY_DIR",
+                                        value="/pubkeys",
                                     ),
                                     EnvVarArgs(name="SUDO_ACCESS", value="false"),
                                     EnvVarArgs(
