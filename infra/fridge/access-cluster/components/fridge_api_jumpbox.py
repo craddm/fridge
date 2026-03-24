@@ -42,21 +42,21 @@ class FridgeAPIJumpbox(ComponentResource):
         child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
 
         self.api_jumpbox_ns = Namespace(
-            "api-jumpbox-ns",
+            "fridge-api-jumpbox-ns",
             metadata=ObjectMetaArgs(
-                name="api-jumpbox",
+                name="fridge-api-jumpbox",
                 labels={} | PodSecurityStandard.PRIVILEGED.value,
             ),
             opts=child_opts,
         )
 
         self.ssh_key_secret = Secret(
-            "api-jumpbox-ssh-key-secret",
+            "fridge-api-jumpbox-ssh-key-secret",
             metadata=ObjectMetaArgs(
                 namespace=self.api_jumpbox_ns.metadata.name,
             ),
             string_data={
-                "authorized_keys": args.config.require("jumpbox_ssh_public_key"),
+                "authorized_keys": args.config.require("user_ssh_public_key"),
             },
             opts=ResourceOptions.merge(
                 child_opts,
@@ -66,8 +66,8 @@ class FridgeAPIJumpbox(ComponentResource):
 
         script_path = Path(__file__).parent / "scripts" / "ssh_config.sh"
 
-        self.api_jumpbox_config_script = ConfigMap(
-            "api-jumpbox-config-script",
+        self.fridge_api_jumpbox_config_script = ConfigMap(
+            "fridge-api-jumpbox-config-script",
             metadata=ObjectMetaArgs(
                 namespace=self.api_jumpbox_ns.metadata.name,
             ),
@@ -78,18 +78,18 @@ class FridgeAPIJumpbox(ComponentResource):
         )
 
         self.api_jumpbox = Deployment(
-            "api-jumpbox",
+            "fridge-api-jumpbox",
             metadata=ObjectMetaArgs(
                 namespace=self.api_jumpbox_ns.metadata.name,
             ),
             spec=DeploymentSpecArgs(
                 selector=LabelSelectorArgs(
-                    match_labels={"app": "api-jumpbox"},
+                    match_labels={"app": "fridge-api-jumpbox"},
                 ),
                 replicas=1,
                 template=PodTemplateSpecArgs(
                     metadata=ObjectMetaArgs(
-                        labels={"app": "api-jumpbox"},
+                        labels={"app": "fridge-api-jumpbox"},
                     ),
                     spec=PodSpecArgs(
                         containers=[
@@ -144,7 +144,7 @@ class FridgeAPIJumpbox(ComponentResource):
                             VolumeArgs(
                                 name="setup-script",
                                 config_map=ConfigMapVolumeSourceArgs(
-                                    name=self.api_jumpbox_config_script.metadata.name,
+                                    name=self.fridge_api_jumpbox_config_script.metadata.name,
                                     default_mode=0o755,
                                 ),
                             ),
@@ -154,23 +154,23 @@ class FridgeAPIJumpbox(ComponentResource):
             ),
             opts=ResourceOptions.merge(
                 child_opts,
-                ResourceOptions(depends_on=[self.api_jumpbox_ns]),
+                ResourceOptions(depends_on=[self.fridge_api_jumpbox_ns]),
             ),
         )
 
-        self.api_jumpbox_service = Service(
-            "api-jumpbox-service",
+        self.fridge_api_jumpbox_service = Service(
+            "fridge-api-jumpbox-service",
             metadata=ObjectMetaArgs(
-                name="api-jumpbox-service",
-                namespace=self.api_jumpbox_ns.metadata.name,
+                name="fridge-api-jumpbox-service",
+                namespace=self.fridge_api_jumpbox.metadata.name,
             ),
             spec=ServiceSpecArgs(
-                selector=self.api_jumpbox.spec.template.metadata.labels,
+                selector=self.fridge_api_jumpbox.spec.template.metadata.labels,
                 ports=[{"protocol": "TCP", "port": 2222, "targetPort": 2222}],
                 type="ClusterIP",
             ),
             opts=ResourceOptions.merge(
                 child_opts,
-                ResourceOptions(depends_on=[self.api_jumpbox]),
+                ResourceOptions(depends_on=[self.fridge_api_jumpbox]),
             ),
         )
