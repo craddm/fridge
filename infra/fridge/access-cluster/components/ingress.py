@@ -3,14 +3,21 @@ from pulumi_kubernetes.core.v1 import Namespace, Service
 from pulumi_kubernetes.helm.v3 import Release, ReleaseArgs
 from pulumi_kubernetes.meta.v1 import ObjectMetaArgs
 from .fridge_api_jumpbox import FridgeAPIJumpbox
+from .k8s_api_jumpbox import K8sAPIJumpbox
 
 from enums import K8sEnvironment, PodSecurityStandard
 
 
 class IngressArgs:
-    def __init__(self, api_jumpbox: FridgeAPIJumpbox, k8s_environment: K8sEnvironment):
+    def __init__(
+        self,
+        fridge_api_jumpbox: FridgeAPIJumpbox,
+        k8s_api_jumpbox: K8sAPIJumpbox,
+        k8s_environment: K8sEnvironment,
+    ):
         self.k8s_environment = k8s_environment
-        self.api_jumpbox = api_jumpbox
+        self.fridge_api_jumpbox = fridge_api_jumpbox
+        self.k8s_api_jumpbox = k8s_api_jumpbox
 
 
 class Ingress(ComponentResource):
@@ -52,9 +59,9 @@ class Ingress(ComponentResource):
                             },
                             "tcp": {
                                 "2222": Output.concat(
-                                    args.api_jumpbox.api_jumpbox_ns.metadata.name,
+                                    args.fridge_api_jumpbox.fridge_api_jumpbox_ns.metadata.name,
                                     "/",
-                                    args.api_jumpbox.api_jumpbox_service.metadata.name,
+                                    args.fridge_api_jumpbox.fridge_api_jumpbox_service.metadata.name,
                                     ":",
                                     "2222",
                                 ),
