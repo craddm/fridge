@@ -56,7 +56,10 @@ class FridgeAPIJumpbox(ComponentResource):
                 namespace=self.api_jumpbox_ns.metadata.name,
             ),
             string_data={
-                "authorized_keys": args.config.require("jumpbox_ssh_public_key"),
+                "fridge_and_k8s_api.pub": args.config.require(
+                    "admin_jumpbox_public_key"
+                ),
+                "fridge_only_api.pub": args.config.require("user_jumpbox_public_key"),
             },
             opts=ResourceOptions.merge(
                 child_opts,
