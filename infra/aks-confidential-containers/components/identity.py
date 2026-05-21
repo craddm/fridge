@@ -74,4 +74,10 @@ class Identity(ComponentResource):
             scope=args.networking.isolated_nodes.id,
         )
 
+        self.workload_identity = managedidentity.UserAssignedIdentity(
+            "workload_identity",
+            resource_group_name=args.resource_group_name,
+            opts=child_opts,
+        )
+
         self.register_outputs({"identity": self.identity})
