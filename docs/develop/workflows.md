@@ -40,6 +40,22 @@ There are several ways that `WorkflowTemplates` can be deployed.
 
 ## Enabling use of MinIO
 
+Note that MinIO uses a self-signed TLS certificate to encrypt traffic within the cluster.
+The relevant certificate is included in a certificate bundle in the `argo-workflows` namespace.
+It is recommended to overwrite any SSL certificate bundle in the container as follows:
+
+```yaml
+    container:
+        volumeMounts:
+            - ssl-certs
+              readOnly: True
+                mountPath: /etc/ssl/certs
+    volumes:
+        - name: ssl-certs
+          secret:
+            secretName: trusted-certificates
+```
+
 ## Enabling GPU access within a workflow
 
 A workflow intended to run using a GPU must have several additional elements specified.
