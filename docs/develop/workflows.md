@@ -4,6 +4,30 @@ This guide contains guidance for the creation of Argo Workflows `Workflows` and 
 
 For more general guidance on how to create workflows, see the official [Argo Workflows user guide](https://argo-workflows.readthedocs.io/en/latest/workflow-concepts/)
 
+## FRIDGE Workflow requirements
+
+Workflows in FRIDGE run in the `argo-workflows` namespace.
+The namespace Pod Security Standards set to [`RESTRICTED`](https://kubernetes.io/docs/concepts/security/pod-security-standards/#restricted).
+
+This means that all Workflows must create non-root, unprivileged containers.
+Note that these fields do not need to be explicitly set.
+By default, Argo Workflows in FRIDGE has been configured to run pods with the following security context, which meets `restricted` standards:
+
+```yaml
+securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    runAsGroup: 8737
+    runAsNonRoot: true
+    runAsUser: 8737
+    seccompProfile:
+      type: RuntimeDefault
+```
+
+If you modify any of these fields in your Workflow or Workflow template, the pod will be rejected and your workflow will fail to run.
+
 ## Creating and Deploying a Workflow Template
 
 Workflows and WorkflowTemplates are defined using YAML.
