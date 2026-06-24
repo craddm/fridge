@@ -56,7 +56,7 @@ class IsolatedCluster(ComponentResource):
 
         self.isolated_cluster = ManagedCluster(
             "isolated-cluster",
-            resource_name=args.cluster_name,
+            resource_name_=args.cluster_name,
             resource_group_name=args.resource_group_name,
             api_server_access_profile=ManagedClusterAPIServerAccessProfileArgs(
                 enable_private_cluster=True,
@@ -68,7 +68,7 @@ class IsolatedCluster(ComponentResource):
                     max_pods=100,
                     min_count=2,
                     mode="User",
-                    name="cvmnodepool",
+                    name="workloads",
                     node_labels={
                         "context": "fridge",
                         "size": "B4als_v2",
