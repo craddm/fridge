@@ -1,5 +1,5 @@
 import pulumi
-from pulumi import ComponentResource, ResourceOptions
+from pulumi import ComponentResource, Output, ResourceOptions
 
 from pulumi_azure_native import authorization, managedidentity
 
@@ -75,10 +75,29 @@ class Identity(ComponentResource):
             scope=args.networking.isolated_nodes.id,
         )
 
+        # Create a separate managed identity for workload identity
         self.workload_identity = managedidentity.UserAssignedIdentity(
             "workload_identity",
             resource_group_name=args.resource_group_name,
             opts=child_opts,
         )
 
-        self.register_outputs({"identity": self.identity})
+        authorization.RoleAssignment(
+            "workload_role_assignment_vm_contrib",
+            principal_id=self.workload_identity.principal_id,
+            principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
+            # Contributor: https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles
+            role_definition_id=f"/subscriptions/{args.azure_config.require('subscriptionId')}/providers/Microsoft.Authorization/roleDefinitions/9980e02c-c2be-4d73-94e8-173b1dc7cf3c",
+            scope=Output.concat(
+                "/subscriptions/",
+                args.azure_config.require("subscriptionId"),
+                "/resourceGroups/",
+                args.resource_group_name,
+            ),
+        )
+
+        self.workload_identity_name = self.workload_identity.name
+
+        self.register_outputs(
+            {"identity": self.identity, "workload_identity": self.workload_identity}
+        )
