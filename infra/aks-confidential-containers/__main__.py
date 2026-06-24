@@ -167,8 +167,8 @@ isolated_admin_credentials = (
 
 federated_identity_credential = managedidentity.FederatedIdentityCredential(
     "federated-identity-credential",
-    name="fridge-federated-identity-credential",
-    federated_identity_credential_name="fridge-federated-identity-credential",
+    resource_name_=identity.workload_identity.name.apply(lambda name: f"{name}"),
+    federated_identity_credential_resource_name="fridge-federated-identity-credential",
     resource_group_name=resource_group.name,
     audiences=["api://AzureADTokenExchange"],
     issuer=isolated_cluster.odic_issuer_url,
