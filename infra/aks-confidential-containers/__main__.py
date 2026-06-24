@@ -5,7 +5,6 @@ import pulumi
 import pulumi_random as random
 import pulumi_tls as tls
 from pulumi_azure_native import (
-    authorization,
     compute,
     containerservice,
     keyvault,
@@ -103,19 +102,19 @@ identity = managedidentity.UserAssignedIdentity(
     resource_group_name=resource_group.name,
 )
 
-authorization.RoleAssignment(
-    "cluster_role_assignment_disk_encryption_set",
-    principal_id=identity.principal_id,
-    principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
-    # Contributor: https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles
-    role_definition_id=f"/subscriptions/{azure_config.require('subscriptionId')}/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
-    # The docs suggest using the scope of the resource group where the disk encryption
-    # set is located. However, the scope of the disk encryption set seems sufficient.
-    # Disks are created in the AKS managed resource group
-    # https://learn.microsoft.com/en-us/azure/aks/azure-disk-customer-managed-keys#encrypt-your-aks-cluster-data-disk
-    # scope=f"/subscriptions/{azure_config.require('subscriptionId')}"
-    scope=disk_encryption_set.id,
-)
+# authorization.RoleAssignment(
+#     "cluster_role_assignment_disk_encryption_set",
+#     principal_id=identity.principal_id,
+#     principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
+#     # Contributor: https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles
+#     role_definition_id=f"/subscriptions/{azure_config.require('subscriptionId')}/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
+#     # The docs suggest using the scope of the resource group where the disk encryption
+#     # set is located. However, the scope of the disk encryption set seems sufficient.
+#     # Disks are created in the AKS managed resource group
+#     # https://learn.microsoft.com/en-us/azure/aks/azure-disk-customer-managed-keys#encrypt-your-aks-cluster-data-disk
+#     # scope=f"/subscriptions/{azure_config.require('subscriptionId')}"
+#     scope=disk_encryption_set.id,
+# )
 
 # Networking
 networking = components.Networking(
@@ -129,24 +128,40 @@ networking = components.Networking(
 
 # Grant the managed identity Contributor role on the access vnet so it can manage network interfaces
 # This allows the creation of internal load balancers to make it easier to direct traffic between the subnets
-authorization.RoleAssignment(
-    "cluster_role_assignment_access_vnet",
-    principal_id=identity.principal_id,
-    principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
-    # Contributor: https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles
-    role_definition_id=f"/subscriptions/{azure_config.require('subscriptionId')}/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
-    scope=networking.access_nodes.id,
-)
+# authorization.RoleAssignment(
+#     "cluster_role_assignment_access_vnet",
+#     principal_id=identity.principal_id,
+#     principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
+#     # Contributor: https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles
+#     role_definition_id=f"/subscriptions/{azure_config.require('subscriptionId')}/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
+#     scope=networking.access_nodes.id,
+# )
 
-# Grant the managed identity Contributor role on the isolated vnet so it can manage network interfaces
-# This allows the creation of internal load balancers to make it easier to direct traffic to the right place on the isolated network
-authorization.RoleAssignment(
-    "cluster_role_assignment_isolated_vnet",
-    principal_id=identity.principal_id,
-    principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
-    # Contributor: https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles
-    role_definition_id=f"/subscriptions/{azure_config.require('subscriptionId')}/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
-    scope=networking.isolated_nodes.id,
+# # Grant the managed identity Contributor role on the isolated vnet so it can manage network interfaces
+# # This allows the creation of internal load balancers to make it easier to direct traffic to the right place on the isolated network
+# authorization.RoleAssignment(
+#     "cluster_role_assignment_isolated_vnet",
+#     principal_id=identity.principal_id,
+#     principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
+#     # Contributor: https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles
+#     role_definition_id=f"/subscriptions/{azure_config.require('subscriptionId')}/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
+#     scope=networking.isolated_nodes.id,
+# )
+
+# Create access cluster
+
+# This is a public facing cluster that will run proxies to the private cluster
+
+access_cluster = components.AccessCluster(
+    "access-cluster",
+    components.AccessClusterArgs(
+        config=config,
+        resource_group_name=resource_group.name,
+        cluster_name=f"{config.require('cluster_name')}-access",
+        identity=identity,
+        nodes_subnet_id=networking.access_nodes_subnet_id,
+        ssh_key=ssh_key,
+    ),
 )
 
 # Create isolated cluster to host private workloads
@@ -169,21 +184,6 @@ isolated_admin_credentials = (
     )
 )
 
-# Create access cluster
-
-# This is a public facing cluster that will run proxies to the private cluster
-
-access_cluster = components.AccessCluster(
-    "access-cluster",
-    components.AccessClusterArgs(
-        config=config,
-        resource_group_name=resource_group.name,
-        cluster_name=f"{config.require('cluster_name')}-access",
-        identity=identity,
-        nodes_subnet_id=networking.access_nodes_subnet_id,
-        ssh_key=ssh_key,
-    ),
-)
 
 access_admin_credentials = (
     containerservice.list_managed_cluster_admin_credentials_output(
