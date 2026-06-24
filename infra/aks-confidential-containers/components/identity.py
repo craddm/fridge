@@ -36,11 +36,12 @@ class Identity(ComponentResource):
 
         self.name = self.identity.name
         self.client_id = self.identity.client_id
+        self.id = self.identity.id
         self.principal_id = self.identity.principal_id
 
         authorization.RoleAssignment(
             "cluster_role_assignment_disk_encryption_set",
-            principal_id=self.identity.principal_id,
+            principal_id=self.principal_id,
             principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
             # Contributor: https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles
             role_definition_id=f"/subscriptions/{args.azure_config.require('subscriptionId')}/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
@@ -56,7 +57,7 @@ class Identity(ComponentResource):
         # This allows the creation of internal load balancers to make it easier to direct traffic between the subnets
         authorization.RoleAssignment(
             "cluster_role_assignment_access_vnet",
-            principal_id=self.identity.principal_id,
+            principal_id=self.principal_id,
             principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
             # Contributor: https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles
             role_definition_id=f"/subscriptions/{args.azure_config.require('subscriptionId')}/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
@@ -67,7 +68,7 @@ class Identity(ComponentResource):
         # This allows the creation of internal load balancers to make it easier to direct traffic to the right place on the isolated network
         authorization.RoleAssignment(
             "cluster_role_assignment_isolated_vnet",
-            principal_id=self.identity.principal_id,
+            principal_id=self.principal_id,
             principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
             # Contributor: https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles
             role_definition_id=f"/subscriptions/{args.azure_config.require('subscriptionId')}/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
