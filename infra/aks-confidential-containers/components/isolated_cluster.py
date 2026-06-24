@@ -34,7 +34,7 @@ class IsolatedClusterArgs:
         cluster_name: str,
         config: pulumi.config.Config,
         disk_encryption_set: compute.DiskEncryptionSet,
-        identity: managedidentity.UserAssignedIdentity,
+        identity: ComponentResource,
         nodes_subnet_id: str,
         resource_group_name: str,
         ssh_key: tls.PrivateKey,
