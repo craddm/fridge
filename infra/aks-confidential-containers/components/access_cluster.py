@@ -2,9 +2,7 @@ import pulumi
 import pulumi_tls as tls
 
 from pulumi import ComponentResource, ResourceOptions
-from pulumi_azure_native import (
-    managedidentity,
-)
+
 from pulumi_azure_native.containerservice import (
     AdvancedNetworkingArgs,
     AdvancedNetworkingObservabilityArgs,
