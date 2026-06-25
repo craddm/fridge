@@ -96,6 +96,34 @@ class Identity(ComponentResource):
             ),
         )
 
+        authorization.RoleAssignment(
+            "workload_role_assignment_reader",
+            principal_id=self.workload_identity.principal_id,
+            principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
+            # Contributor: https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles
+            role_definition_id=f"/subscriptions/{args.azure_config.require('subscriptionId')}/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7",
+            scope=Output.concat(
+                "/subscriptions/",
+                args.azure_config.require("subscriptionId"),
+                "/resourceGroups/",
+                args.resource_group_name,
+            ),
+        )
+
+        authorization.RoleAssignment(
+            "workload_role_assignment_network_contributor",
+            principal_id=self.workload_identity.principal_id,
+            principal_type=authorization.PrincipalType.SERVICE_PRINCIPAL,
+            # Contributor: https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles
+            role_definition_id=f"/subscriptions/{args.azure_config.require('subscriptionId')}/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7",
+            scope=Output.concat(
+                "/subscriptions/",
+                args.azure_config.require("subscriptionId"),
+                "/resourceGroups/",
+                args.resource_group_name,
+            ),
+        )
+
         self.workload_identity_name = self.workload_identity.name
 
         self.register_outputs(
