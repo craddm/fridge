@@ -70,6 +70,7 @@ class IsolatedCluster(ComponentResource):
                         "context": "fridge",
                         "size": "DC2ads_v5",
                         "arch": "x86_64",
+                        "node.kubernetes.io/worker": "",
                     },
                     os_disk_size_gb=0,  # when == 0 sets default size
                     os_type="Linux",
