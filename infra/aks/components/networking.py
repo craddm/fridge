@@ -109,7 +109,7 @@ class Networking(ComponentResource):
                     access=network.SecurityRuleAccess.ALLOW,
                     protocol=network.SecurityRuleProtocol.TCP,
                     source_port_range="*",
-                    destination_port_range="2500",
+                    destination_port_range="2222",
                     source_address_prefixes=args.config.require_object(
                         "admin_ip_allowlist"
                     ),
