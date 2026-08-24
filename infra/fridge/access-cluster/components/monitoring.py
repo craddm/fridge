@@ -1,11 +1,11 @@
 import pulumi
-from pulumi import ComponentResource, ResourceOptions
+from pulumi import ComponentResource, FileAsset, ResourceOptions
 from pulumi_kubernetes.core.v1 import (
     Namespace,
 )
 from pulumi_kubernetes.helm.v3 import Release, ReleaseArgs
 from pulumi_kubernetes.meta.v1 import ObjectMetaArgs
-from pulumi_kubernetes.yaml import ConfigFile
+from pulumi_kubernetes.yaml import ConfigFile, ConfigGroup
 
 
 from enums import K8sEnvironment, SoftwareVersion
@@ -104,7 +104,7 @@ class Monitoring(ComponentResource):
                                 {
                                     "from": "2025-10-24",
                                     "store": "tsdb",
-                                    "object_store": "azure",
+                                    "object_store": "filesystem",
                                     "schema": "v13",
                                     "index": {
                                         "prefix": "index_",
@@ -114,12 +114,7 @@ class Monitoring(ComponentResource):
                             ]
                         },
                         "storage": {
-                            "type": "azure",
-                            "azure": {
-                                "connectionString": args.config.require(
-                                    "azure_storage_connection_string"
-                                ),
-                            },
+                            "type": "filesystem",
                         },
                     }
                 }
@@ -156,7 +151,7 @@ class Monitoring(ComponentResource):
                 repository_opts={"repo": "https://grafana.github.io/helm-charts"},
                 namespace=self.monitoring_ns.metadata.name,
                 create_namespace=False,
-                values_yaml_file="k8s/monitoring/loki-values.yaml",
+                value_yaml_files=[FileAsset("k8s/monitoring/loki-values.yaml")],
                 values=loki_values,
             ),
             opts=ResourceOptions.merge(
@@ -201,11 +196,46 @@ class Monitoring(ComponentResource):
             ),
         )
 
+        self.service_monitors = ConfigGroup(
+            "service-monitors",
+            files=[
+                "./k8s/monitoring/service-monitors.yaml",
+            ],
+            opts=ResourceOptions.merge(
+                child_opts,
+                ResourceOptions(
+                    depends_on=[
+                        self.prometheus_operator,
+                        self.grafana_loki,
+                        self.grafana_alloy,
+                    ]
+                ),
+            ),
+        )
+
+        self.prometheus_alerts = ConfigGroup(
+            "prometheus-alerts",
+            files=[
+                "./k8s/monitoring/alerting-rules.yaml",
+            ],
+            opts=ResourceOptions.merge(
+                child_opts,
+                ResourceOptions(
+                    depends_on=[
+                        self.prometheus_operator,
+                        self.grafana_loki,
+                        self.grafana_alloy,
+                    ]
+                ),
+            ),
+        )
+
         self.register_outputs(
             {
                 "namespace": self.monitoring_ns.metadata.name,
                 "grafana_loki": self.grafana_loki,
                 "prometheus_operator": self.prometheus_operator,
                 "grafana_alloy": self.grafana_alloy,
+                "prometheus_alerts": self.prometheus_alerts,
             }
         )
