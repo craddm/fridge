@@ -48,14 +48,34 @@ config:
     secret: true
   netbird:
     value:
+      hostname:
+        type: string
+        description: Netbird hostname for the access cluster
+      management_url:
+        default: "https://api.netbird.io"
+        type: string
+        description: Netbird management URL for the access cluster
+        secret: true
+      relay_server:
+        default: "relay.netbird.io"
+        type: string
+        description: Netbird relay server for the access cluster
       setup_key:
         type: string
         description: Netbird setup key for the access cluster
         secret: true
-      management_url:
+      signal_server:
+        default: "signal.netbird.io"
         type: string
-        description: Netbird management URL for the access cluster
-        secret: true
+        description: Netbird signal server for the access cluster
+      stun_server:
+        default: "stun.netbird.io"
+        type: string
+        description: Netbird STUN server for the access cluster
+      turn_server:
+        default: "turn.netbird.io"
+        type: string
+        description: Netbird TURN server for the access cluster
   kubernetes:context:
     value: ""
     description: Kubernetes context for the FRIDGE deployment
