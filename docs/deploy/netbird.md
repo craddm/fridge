@@ -49,7 +49,6 @@ alt: An example of the correct setup for NetBird Access policies.
 ```
 
 
-
 ## Connecting over the VPN
 
 To connect to the FRIDGE over the VPN, you can use either the IP address or FQDN of the NetBird peer inside the FRIDGE from another registered peer.
@@ -65,13 +64,23 @@ or
 https://<access-peer-netbird-FQDN>:6443
 ```
 
+When intending to use the Kubernetes API through the VPN, you will need to modify your Kubernetes context.
+We recommend using a copy of your original context.
+Modify the `server` field to match either the NetBird IP address or FQDN, as appropriate.
+Modify or add the `tls-server-name:` with the value `localhost` on Dawn, or the private Azure API FQDN when using AKS.
+
 ## Pulumi stack configuration
+
+Additional NetBird-specific configuration fields are required in the Pulumi configuration.
+If using NetBird Cloud, most of these fields have appropriate default values.
+If using self-hosted NetBird, you will need to provide values pointing to your self-hosted instance.
 
 ```yaml
 config:
   fridge-access:netbird:
     hostname: <stable-name-for-the-access-peer>
     management_url:
+      value: "https://api.netbird.io:443"
       secure: <NetBird-management-URL>
       secret: true
     setup_key:
@@ -84,6 +93,6 @@ config:
 We recommend using a single-use NetBird setup key.
 The peer will store its credentials in the cluster in a way that will survive pod restarts, so it is not necessary to make the key reusable.
 
-At present, only Netbird Cloud is fully supported.
+At present, only NetBird Cloud is supported.
 `management_url` is the FQDN for NetBird's API server.
-The `management_url` defaults to that of the Netbird Cloud api.
+The `management_url` defaults to that of the NetBird Cloud api.
