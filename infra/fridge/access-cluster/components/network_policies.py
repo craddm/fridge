@@ -318,73 +318,11 @@ class NetworkPolicies(ComponentResource):
             },
         ]
 
-        # ConfigFile(
-        #     "network_policy_vpn_server",
-        #     file="./k8s/cilium/vpn-server.yaml",
-        #     opts=child_opts,
-        # )
-
         if args.k8s_environment == K8sEnvironment.AKS:
             netbird_dns_rules.append(
                 {"matchName": args.config.require("isolated_cluster_api_endpoint")}
             )
-        #     self.vpn_server_cnp_custom = CustomResource(
-        #         "network_policy_vpn_server_custom",
-        #         api_version="cilium.io/v2",
-        #         kind="CiliumNetworkPolicy",
-        #         metadata=ObjectMetaArgs(
-        #             name="vpn-server-custom", namespace="vpn-server"
-        #         ),
-        #         spec={
-        #             "endpointSelector": {"matchLabels": {"app": "netbird-proxy"}},
-        #             "egress": [
-        #                 {
-        #                     "toEndpoints": [
-        #                         {
-        #                             "matchLabels": {
-        #                                 "io.kubernetes.pod.namespace": "kube-system",
-        #                                 "k8s-app": "kube-dns",
-        #                             }
-        #                         }
-        #                     ],
-        #                     "toPorts": [
-        #                         {
-        #                             "ports": [{"port": "53", "protocol": "ANY"}],
-        #                             "rules": {
-        #                                 "dns": [
-        #                                     {
-        #                                         "matchName": args.config.require(
-        #                                             "isolated_cluster_api_endpoint"
-        #                                         )
-        #                                     }
-        #                                 ]
-        #                             },
-        #                         }
-        #                     ],
-        #                 },
-        #                 fridge_api_ip_rule,
-        #                 k8s_api_endpoint_rule,
-        #             ],
-        #         },
-        #         opts=child_opts,
-        #     )
-        # else:
-        #     self.vpn_server_cnp_custom = CustomResource(
-        #         "network_policy_vpn_server_custom",
-        #         api_version="cilium.io/v2",
-        #         kind="CiliumNetworkPolicy",
-        #         metadata=ObjectMetaArgs(
-        #             name="vpn-server-custom", namespace="vpn-server"
-        #         ),
-        #         spec={
-        #             "endpointSelector": {"matchLabels": {"app": "netbird-proxy"}},
-        #             "egress": [
-        #                 fridge_api_ip_rule,
-        #                 k8s_api_endpoint_rule,
-        #             ],
-        #         },
-        #         opts=child_opts,
-        #     )
+
         self.vpn_server_cnp_custom = CustomResource(
             "network_policy_vpn_server_custom",
             api_version="cilium.io/v2",
