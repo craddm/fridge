@@ -48,7 +48,6 @@ alt: An example of the correct setup for NetBird Access policies.
 ---
 ```
 
-
 ## Connecting over the VPN
 
 To connect to the FRIDGE over the VPN, you can use either the IP address or FQDN of the NetBird peer inside the FRIDGE from another registered peer.
@@ -72,27 +71,33 @@ Modify or add the `tls-server-name:` with the value `localhost` on Dawn, or the 
 ## Pulumi stack configuration
 
 Additional NetBird-specific configuration fields are required in the Pulumi configuration.
-If using NetBird Cloud, most of these fields have appropriate default values.
-If using self-hosted NetBird, you will need to provide values pointing to your self-hosted instance.
 
 ```yaml
 config:
   fridge-access:netbird:
     hostname: <stable-name-for-the-access-peer>
-    management_url:
-      value: "https://api.netbird.io:443"
+    management_uri:
+      value: "https://api.netbird.io"
       secure: <NetBird-management-URL>
-      secret: true
     setup_key:
       secure: <NetBird-setup-key>
       secret: true
 ```
 
-`hostname` should be a stable, descriptive name for the peer in the access cluster (e.g. `fridge-access-prod`).
+`hostname` should be a stable, descriptive name to be used for the peer in the access cluster (e.g. `fridge-access-prod`).
 
-We recommend using a single-use NetBird setup key.
-The peer will store its credentials in the cluster in a way that will survive pod restarts, so it is not necessary to make the key reusable.
+`management_uri` is the URI for NetBird's API server.
+The `management_uri` defaults to that of the NetBird Cloud API.
+When using NetBird Cloud, additional NetBird servers (e.g. the `signal` or `relay` servers) are assumed to use the standard FQDNs for NetBird Cloud.
 
-At present, only NetBird Cloud is supported.
-`management_url` is the FQDN for NetBird's API server.
-The `management_url` defaults to that of the NetBird Cloud api.
+When using self-hosted NetBird, you should provide the URI of your NetBird server.
+By default, Pulumi will assume that all additional servers are hosted at the same URI.
+
+If you have separated out the NetBird services and allocated to them to different URIs, you can manually specify the correct FQDNs using `endpoint_overrides`:
+
+```yaml
+fridge-access:netbird:
+  endpoint_overrides:
+    stun: stun.example.org
+    relay: relay.example.org
+```
