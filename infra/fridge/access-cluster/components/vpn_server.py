@@ -21,14 +21,10 @@ from pulumi_kubernetes.core.v1 import (
     PodSpecArgs,
     PodTemplateSpecArgs,
     SecurityContextArgs,
-    Service,
-    ServicePortArgs,
-    ServiceSpecArgs,
     VolumeArgs,
     VolumeMountArgs,
     VolumeResourceRequirementsArgs,
 )
-from pulumi_kubernetes.discovery.v1 import EndpointSlice
 from pulumi_kubernetes.meta.v1 import LabelSelectorArgs, ObjectMetaArgs
 
 from enums import K8sEnvironment, PodSecurityStandard, SoftwareVersion
