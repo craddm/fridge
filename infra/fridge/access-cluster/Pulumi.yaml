@@ -51,7 +51,7 @@ config:
       hostname:
         type: string
         description: Netbird hostname for the access cluster. Will be used as the peer name
-      management_url:
+      management_uri:
         default: "https://api.netbird.io"
         type: string
         description: Netbird management URL for the access cluster. Defaults to NetBird Cloud
