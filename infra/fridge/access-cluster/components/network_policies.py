@@ -250,18 +250,41 @@ class NetworkPolicies(ComponentResource):
         # Configure NetBird network policies
         netbird_config = args.config.require_object("netbird")
         management_url = urlparse(netbird_config.get("management_url")).hostname
-        signal_server = netbird_config.get("signal_server", "signal.netbird.io")
-        stun_server = netbird_config.get("stun_server", "stun.netbird.io")
-        relay_server = netbird_config.get("relay_server", "relay.netbird.io")
-        turn_server = netbird_config.get("turn_server", "turn.netbird.io")
+        if not management_url:
+            raise ValueError(
+                "Invalid management_url in Netbird configuration: must be a valid URL"
+            )
+
+        is_cloud_netbird = management_url == "api.netbird.io"
+
+        default_hosts = (
+            {
+                "signal": "signal.netbird.io",
+                "stun": "stun.netbird.io",
+                "relay": "relay.netbird.io",
+                "turn": "turn.netbird.io",
+            }
+            if is_cloud_netbird
+            else {
+                "signal": management_url,
+                "stun": management_url,
+                "relay": management_url,
+                "turn": management_url,
+            }
+        )
+
+        overrides = netbird_config.get("endpoint_overrides", {})
+        netbird_hosts = (
+            default_hosts | overrides
+        )  # Merge default hosts with any overrides provided in the config
 
         netbird_dns_rules = [
             {"matchName": management_url},
-            {"matchName": signal_server},
-            {"matchName": stun_server},
-            {"matchName": relay_server},
-            {"matchName": turn_server},
-            {"matchPattern": f"*.{relay_server}"},
+            {"matchName": netbird_hosts["signal"]},
+            {"matchName": netbird_hosts["stun"]},
+            {"matchName": netbird_hosts["relay"]},
+            {"matchName": netbird_hosts["turn"]},
+            {"matchPattern": f"*.{netbird_hosts['relay']}"},
             {"matchPattern": "*.vpn-server.svc.cluster.local"},
         ]
 
@@ -285,14 +308,14 @@ class NetworkPolicies(ComponentResource):
             {
                 "toFQDNs": [
                     {"matchName": management_url},
-                    {"matchName": signal_server},
-                    {"matchName": relay_server},
-                    {"matchPattern": f"*{relay_server}"},
+                    {"matchName": netbird_hosts["signal"]},
+                    {"matchName": netbird_hosts["relay"]},
+                    {"matchPattern": f"*{netbird_hosts['relay']}"},
                 ],
                 "toPorts": [{"ports": [{"port": "443", "protocol": "TCP"}]}],
             },
             {
-                "toFQDNs": [{"matchName": stun_server}],
+                "toFQDNs": [{"matchName": netbird_hosts["stun"]}],
                 "toPorts": [
                     {
                         "ports": [
@@ -305,7 +328,7 @@ class NetworkPolicies(ComponentResource):
                 ],
             },
             {
-                "toFQDNs": [{"matchName": turn_server}],
+                "toFQDNs": [{"matchName": netbird_hosts["turn"]}],
                 "toPorts": [
                     {
                         "ports": [
