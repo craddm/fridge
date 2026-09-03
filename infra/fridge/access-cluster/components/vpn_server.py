@@ -69,12 +69,11 @@ class VpnServer(ComponentResource):
                 f"{isolated_k8s_api_endpoint_raw.split('/', 1)[0]}:6443"
             )
 
-        haproxy_cfg_file = Template(
-            open("./k8s/haproxy/haproxy.cfg", "r").read()
-        ).substitute(
-            fridge_api_endpoint=fridge_api_endpoint,
-            isolated_k8s_api_endpoint=isolated_k8s_api_endpoint,
-        )
+        with open("./k8s/haproxy/haproxy.cfg", "r") as f:
+            haproxy_cfg_file = Template(f.read()).substitute(
+                fridge_api_endpoint=fridge_api_endpoint,
+                isolated_k8s_api_endpoint=isolated_k8s_api_endpoint,
+            )
 
         self.haproxy_config = ConfigMap(
             "haproxy-config",
