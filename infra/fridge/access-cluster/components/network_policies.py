@@ -101,63 +101,6 @@ class NetworkPolicies(ComponentResource):
                     opts=child_opts,
                 )
 
-        self.api_jumpbox_cnp = CustomResource(
-            "network_policy_api_jumpbox",
-            api_version="cilium.io/v2",
-            kind="CiliumNetworkPolicy",
-            metadata=ObjectMetaArgs(name="api-jumpbox-access", namespace="api-jumpbox"),
-            spec={
-                "endpointSelector": {"matchLabels": {"app": "api-jumpbox"}},
-                "ingress": [
-                    {
-                        "fromEndpoints": [
-                            {
-                                "matchLabels": {
-                                    "k8s:app.kubernetes.io/name": "ingress-nginx",
-                                    "k8s:app.kubernetes.io/component": "controller",
-                                    "k8s:io.kubernetes.pod.namespace": "ingress-nginx",
-                                }
-                            }
-                        ],
-                        "toPorts": [{"ports": [{"port": "2222", "protocol": "ANY"}]}],
-                    }
-                ],
-                "egress": [
-                    {
-                        "toEndpoints": [
-                            {
-                                "matchLabels": {
-                                    "k8s:io.kubernetes.pod.namespace": "kube-system",
-                                    "k8s-app": "kube-dns",
-                                }
-                            }
-                        ],
-                        "toPorts": [
-                            {
-                                "ports": [{"port": "53", "protocol": "ANY"}],
-                                "rules": {"dns": [{"matchPattern": "*"}]},
-                            }
-                        ],
-                    },
-                    {
-                        "toEndpoints": [
-                            {
-                                "matchLabels": {
-                                    "k8s:app.kubernetes.io/name": "ingress-nginx",
-                                    "k8s:app.kubernetes.io/component": "controller",
-                                    "k8s:io.kubernetes.pod.namespace": "ingress-nginx",
-                                }
-                            }
-                        ],
-                        "toPorts": [{"ports": [{"port": "2222", "protocol": "TCP"}]}],
-                    },
-                    fridge_api_ip_rule,
-                    k8s_api_endpoint_rule,
-                ],
-            },
-            opts=child_opts,
-        )
-
         self.cert_manager_to_harbor = CustomResource(
             "network_policy_cert_manager_to_harbor",
             api_version="cilium.io/v2",
@@ -191,43 +134,6 @@ class NetworkPolicies(ComponentResource):
                             }
                         ]
                     },
-                ],
-            },
-            opts=child_opts,
-        )
-
-        # This CNP is to allow SSH to come through ingress nginx to the api-jumpbox pod
-        self.api_ssh_ingress_cnp = CustomResource(
-            "network_policy_api_ssh_ingress",
-            api_version="cilium.io/v2",
-            kind="CiliumNetworkPolicy",
-            metadata=ObjectMetaArgs(
-                name="enable-ssh-access", namespace="ingress-nginx"
-            ),
-            spec={
-                "endpointSelector": {
-                    "matchLabels": {
-                        "k8s:app.kubernetes.io/name": "ingress-nginx",
-                        "k8s:app.kubernetes.io/component": "controller",
-                    }
-                },
-                "ingress": [
-                    {
-                        "fromCIDR": ssh_ip_allowlist,
-                        "toPorts": [{"ports": [{"port": "2222", "protocol": "TCP"}]}],
-                    }
-                ],
-                "egress": [
-                    {
-                        "toServices": [
-                            {
-                                "k8sService": {
-                                    "serviceName": "api-jumpbox-service",
-                                    "namespace": "api-jumpbox",
-                                }
-                            }
-                        ]
-                    }
                 ],
             },
             opts=child_opts,
