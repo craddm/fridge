@@ -72,7 +72,7 @@ pulumi config set --secret minio_root_password <your-minio-secret-key>
 It is critical that you set all required configuration keys before deploying the stack.
 In particular, you will need to supply a setup up key for NetBird.
 The setup key will be used to register the NetBird agent in the cluster with the VPN mesh overlay network.
-For a guide to configuring NetBird, see the [Connecting to FRIDGE](../deploy/netbird.md) documentation.
+For a guide to configuring NetBird, see the [Configuring NetBird](./netbird.md) documentation.
 
 For a complete list of configuration keys, see the `Pulumi.yaml` file.
 
