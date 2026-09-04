@@ -249,10 +249,10 @@ class NetworkPolicies(ComponentResource):
 
         # Configure NetBird network policies
         netbird_config = args.config.require_object("netbird")
-        management_url = urlparse(netbird_config.get("management_uri")).hostname
+        management_url = urlparse(netbird_config.get("management_url")).hostname
         if not management_url:
             raise ValueError(
-                "Invalid management_uri in Netbird configuration: must be a valid URL"
+                "Invalid management_url in Netbird configuration: must be a valid URL"
             )
 
         is_cloud_netbird = management_url == "api.netbird.io"
@@ -310,7 +310,7 @@ class NetworkPolicies(ComponentResource):
                     {"matchName": management_url},
                     {"matchName": netbird_hosts["signal"]},
                     {"matchName": netbird_hosts["relay"]},
-                    {"matchPattern": f"*{netbird_hosts['relay']}"},
+                    {"matchPattern": f"*.{netbird_hosts['relay']}"},
                 ],
                 "toPorts": [{"ports": [{"port": "443", "protocol": "TCP"}]}],
             },
