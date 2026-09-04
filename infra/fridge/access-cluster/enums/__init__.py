@@ -40,4 +40,3 @@ class SoftwareVersion(Enum):
     INGRESS_NGINX = "4.13.2"
     LONGHORN = "1.9.0"
     NETBIRD = "0.74.5"
-    OPENSSH_SERVER = "version-10.2_p1-r0"
