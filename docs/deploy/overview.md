@@ -31,11 +31,12 @@ Additionally, if deploying to Azure, you will need the following:
 ### NetBird
 
 Access to a deployed FRIDGE, either for `TRE Administrators` or `TRE Users`, is through a Virtual Private Network managed using [NetBird](https://netbird.io)
-Deploying the
 
 You will require access to a NetBird Management server.
 For testing and development, the free NetBird cloud management server is sufficient.
 However, for production, we recommend using [self-hosted NetBird](https://docs.netbird.io/selfhosted/selfhosted-quickstart).
+
+For instructions on configuring NetBird, see [Configuring NetBird](./netbird.md)
 
 ### Pulumi Backend
 
