@@ -1,10 +1,4 @@
-# Connecting to FRIDGE using NetBird
-
-You will require access to a NetBird Management server.
-For testing and development, the free NetBird cloud management server is sufficient.
-However, for production, we recommend using [self-hosted NetBird](https://docs.netbird.io/selfhosted/selfhosted-quickstart).
-
-## Configuring NetBird
+# Configuring NetBird
 
 Once you have access to a NetBird management server, you are ready to begin setting up your mesh VPN network.
 
