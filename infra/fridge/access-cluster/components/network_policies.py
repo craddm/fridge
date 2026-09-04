@@ -54,10 +54,6 @@ class NetworkPolicies(ComponentResource):
                     "toCIDR": [args.config.require("fridge_api_ip_address")],
                     "toPorts": [{"ports": [{"port": "443", "protocol": "TCP"}]}],
                 }
-                ssh_ip_allowlist = [
-                    admin_ip
-                    for admin_ip in args.config.require_object("admin_ip_allowlist")
-                ]
             case K8sEnvironment.DAWN:
                 # Dawn uses a different external DNS server to AKS, and also runs regular jobs that do not run on AKS
                 ConfigFile(
@@ -89,9 +85,6 @@ class NetworkPolicies(ComponentResource):
                     ],  # [args.config.require("fridge_api_ip_address")],
                     "toPorts": [{"ports": [{"port": "30180", "protocol": "TCP"}]}],
                 }
-                # Note that the traffic to the SSH server comes from within the Dawn access subnet, even though it originates externally
-                # on Dawn, external traffic comes through a load balancer with CIDR restrictions, so filtering is done there
-                ssh_ip_allowlist = ["10.10.0.0/16"]
             case K8sEnvironment.K3S:
                 # K3S policies applicable for a local dev environment
                 # These could be used in any vanilla k8s + Cilium local cluster
