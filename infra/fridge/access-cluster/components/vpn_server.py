@@ -14,12 +14,15 @@ from pulumi_kubernetes.core.v1 import (
     ContainerArgs,
     ContainerPortArgs,
     EnvVarArgs,
+    EnvVarSourceArgs,
     Namespace,
     PersistentVolumeClaim,
     PersistentVolumeClaimSpecArgs,
     PersistentVolumeClaimVolumeSourceArgs,
     PodSpecArgs,
     PodTemplateSpecArgs,
+    Secret,
+    SecretKeySelectorArgs,
     SecurityContextArgs,
     VolumeArgs,
     VolumeMountArgs,
@@ -85,7 +88,19 @@ class VpnServer(ComponentResource):
             opts=child_opts,
         )
 
-        netbird_config = args.config.require_object("netbird")
+        netbird_config = args.config.require_secret_object("netbird")
+
+        setup_key_secret = Secret(
+            "netbird-setup-key",
+            metadata=ObjectMetaArgs(
+                namespace=self.vpn_ns.metadata.name,
+                name="netbird-setup-key",
+            ),
+            string_data=netbird_config.apply(
+                lambda config: {"setup_key": config["setup_key"]}
+            ),
+            opts=child_opts,
+        )
 
         # Use a PersistentVolumeClaim to store Netbird data, so that it persists across pod restarts
         self.netbird_data_volume = PersistentVolumeClaim(
@@ -122,15 +137,24 @@ class VpnServer(ComponentResource):
                                 env=[
                                     EnvVarArgs(
                                         name="NB_SETUP_KEY",
-                                        value=netbird_config["setup_key"],
+                                        value_from=EnvVarSourceArgs(
+                                            secret_key_ref=SecretKeySelectorArgs(
+                                                name="netbird-setup-key",
+                                                key="setup_key",
+                                            )
+                                        ),
                                     ),
                                     EnvVarArgs(
                                         name="NB_MANAGEMENT_URL",
-                                        value=netbird_config["management_url"],
+                                        value=netbird_config.apply(
+                                            lambda config: config["management_url"]
+                                        ),
                                     ),
                                     EnvVarArgs(
                                         name="NB_HOSTNAME",
-                                        value=netbird_config["hostname"],
+                                        value=netbird_config.apply(
+                                            lambda config: config["hostname"]
+                                        ),
                                     ),
                                 ],
                                 volume_mounts=[
