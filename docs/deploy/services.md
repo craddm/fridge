@@ -124,7 +124,7 @@ Two additional steps are required before deploying FRIDGE to the isolated cluste
    ```
 
 :::{important}
-You must be connected to the VPN mesh overlay network to communicated with the Kubernetes API of the isolated cluster
+You must be connected to the VPN mesh overlay network to communicate with the Kubernetes API of the isolated cluster
 :::
 
 Once the stack is configured and you have verified that you can connect to the isolated cluster's Kubernetes API, you can deploy the isolated cluster stack using `pulumi up`.
