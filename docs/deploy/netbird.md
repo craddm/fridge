@@ -64,19 +64,14 @@ Modify or add the `tls-server-name:` with the value `localhost` on Dawn, or the 
 
 ## Pulumi stack configuration
 
-Additional NetBird-specific configuration fields are required in the Pulumi configuration.
+Additional NetBird-specific configuration fields are required in the Pulumi configuration:
 
-```yaml
-config:
-  fridge-access:netbird:
-    hostname: <stable-name-for-the-access-peer>
-    management_url:
-      value: "https://api.netbird.io"
-      secure: <NetBird-management-URL>
-    setup_key:
-      secure: <NetBird-setup-key>
-      secret: true
-```
+- `hostname`
+- `management_url`
+- `setup_key`
+- `endpoint_overrides`
+
+Non-secret values can be added to the configuration file manually or using `pulumi config set --path "netbird.<field_name>" "<value>".
 
 `hostname` should be a stable, descriptive name to be used for the peer in the access cluster (e.g. `fridge-access-prod`).
 
@@ -86,6 +81,11 @@ When using NetBird Cloud, additional NetBird servers (e.g. the `signal` or `rela
 
 When using self-hosted NetBird, you should provide the URL of your NetBird server.
 By default, Pulumi will assume that all additional servers are hosted at the same URL, which is the default configuration for self-hosted NetBird.
+
+`setup_key` should be a single-use key generated using the NetBird management console.
+For convenience, we recommend that this key automatically adds the user of the key to the correct NetBird group.
+`setup_key` should be encoded as a secret using the following command:
+`pulumi config set --secret --path "netbird.setup_key" "<setup_key_here>"`
 
 If you have separated out the NetBird services and allocated to them to different URLs, you can manually specify the correct FQDNs using `endpoint_overrides`:
 
