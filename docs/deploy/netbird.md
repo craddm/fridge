@@ -70,7 +70,7 @@ Additional NetBird-specific configuration fields are required in the Pulumi conf
 config:
   fridge-access:netbird:
     hostname: <stable-name-for-the-access-peer>
-    management_uri:
+    management_url:
       value: "https://api.netbird.io"
       secure: <NetBird-management-URL>
     setup_key:
@@ -80,14 +80,14 @@ config:
 
 `hostname` should be a stable, descriptive name to be used for the peer in the access cluster (e.g. `fridge-access-prod`).
 
-`management_uri` is the URI for NetBird's API server.
-The `management_uri` defaults to that of the NetBird Cloud API.
+`management_url` is the URL for NetBird's API server.
+The `management_url` defaults to that of the NetBird Cloud API.
 When using NetBird Cloud, additional NetBird servers (e.g. the `signal` or `relay` servers) are assumed to use the standard FQDNs for NetBird Cloud.
 
-When using self-hosted NetBird, you should provide the URI of your NetBird server.
-By default, Pulumi will assume that all additional servers are hosted at the same URI.
+When using self-hosted NetBird, you should provide the URL of your NetBird server.
+By default, Pulumi will assume that all additional servers are hosted at the same URL, which is the default configuration for self-hosted NetBird.
 
-If you have separated out the NetBird services and allocated to them to different URIs, you can manually specify the correct FQDNs using `endpoint_overrides`:
+If you have separated out the NetBird services and allocated to them to different URLs, you can manually specify the correct FQDNs using `endpoint_overrides`:
 
 ```yaml
 fridge-access:netbird:
