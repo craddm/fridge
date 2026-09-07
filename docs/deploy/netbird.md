@@ -33,7 +33,7 @@ Traffic on port 8000 will be routed to the FRIDGE API.
 
 In the NetBird management console, create an access policy that allows traffic to flow from the `tre-users` group to `fridge-access` on port 8000.
 Then create an access policy that allows traffic to flow from the `tre-admins` group to `fridge-access` on port 6443.
-This setup is shown in [](#netbird-access-policies).
+This setup is shown in [NetBird access policies](#netbird-access-policies).
 
 ```{figure} ../static/NetBird_access_policies.png
 ---
