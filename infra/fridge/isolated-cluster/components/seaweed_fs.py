@@ -1,0 +1,175 @@
+import pulumi
+from pulumi import ComponentResource, Output, ResourceOptions
+from pulumi_kubernetes.apiextensions import CustomResource
+from pulumi_kubernetes.core.v1 import Namespace, Secret
+from pulumi_kubernetes.helm.v4 import Chart, RepositoryOptsArgs
+from pulumi_kubernetes.meta.v1 import ObjectMetaArgs
+
+from .storage_classes import StorageClasses
+from enums import PodSecurityStandard, SoftwareVersion
+
+
+class SeaweedFsArgs:
+    def __init__(
+        self,
+        config: pulumi.config.Config,
+        storage_classes: StorageClasses,
+        cluster_issuer: CustomResource,
+    ) -> None:
+        self.config = config
+        self.cluster_issuer = cluster_issuer
+        self.storage_classes = storage_classes
+
+
+class SeaweedFs(ComponentResource):
+    def __init__(
+        self, name: str, args: SeaweedFsArgs, opts: ResourceOptions | None = None
+    ) -> None:
+        super().__init__("fridge:SeaweedFs", name, {}, opts)
+        child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
+
+        self.seaweedfs_ns = Namespace(
+            "seaweedfs-ns",
+            metadata=ObjectMetaArgs(
+                name="seaweedfs",
+                labels={"seaweedfs-trust-bundle": "enabled"}
+                | PodSecurityStandard.RESTRICTED.value,
+            ),
+            opts=child_opts,
+        )
+
+        self.seaweedfs_s3_url = Output.concat(
+            "seaweedfs-s3.", self.seaweedfs_ns.metadata.name, ".svc.cluster.local"
+        )
+
+        # SeaweedFS's S3 gateway takes a single static identity, not a MinIO-style root user
+        seaweedfs_s3_config = Output.format(
+            """{{
+                "identities": [
+                    {{
+                        "name": "fridge",
+                        "credentials": [
+                            {{"accessKey": "{0}", "secretKey": "{1}"}}
+                        ],
+                        "actions": ["Admin", "Read", "Write"]
+                    }}
+                ]
+            }}""",
+            args.config.require_secret("seaweedfs_access_key"),
+            args.config.require_secret("seaweedfs_secret_key"),
+        )
+
+        seaweedfs_s3_secret = Secret(
+            "seaweedfs-s3-secret",
+            metadata=ObjectMetaArgs(
+                name="seaweedfs-s3-config",
+                namespace=self.seaweedfs_ns.metadata.name,
+            ),
+            type="Opaque",
+            string_data={
+                "config.json": seaweedfs_s3_config,
+            },
+            opts=ResourceOptions.merge(
+                child_opts,
+                ResourceOptions(depends_on=[self.seaweedfs_ns]),
+            ),
+        )
+
+        self.seaweedfs_certificate = CustomResource(
+            "seaweedfs-certificate",
+            api_version="cert-manager.io/v1",
+            kind="Certificate",
+            metadata=ObjectMetaArgs(
+                name="seaweedfs-tls",
+                namespace=self.seaweedfs_ns.metadata.name,
+            ),
+            spec={
+                "secretName": "seaweedfs-tls",
+                "issuerRef": {
+                    "name": args.cluster_issuer.metadata["name"],
+                    "kind": "ClusterIssuer",
+                },
+                "dnsNames": [
+                    self.seaweedfs_s3_url,
+                ],
+            },
+            opts=ResourceOptions.merge(
+                child_opts,
+                ResourceOptions(depends_on=[self.seaweedfs_ns]),
+            ),
+        )
+
+        self.seaweedfs_trust_bundle = CustomResource(
+            "seaweedfs-trust-bundle",
+            api_version="trust.cert-manager.io/v1alpha1",
+            kind="Bundle",
+            metadata=ObjectMetaArgs(
+                name="operator-ca-tls-seaweedfs",
+            ),
+            spec={
+                "sources": [
+                    {"secret": {"name": "dev-certificate", "key": "ca.crt"}},
+                ],
+                "target": {
+                    "secret": {"key": "ca.crt"},
+                    "namespaceSelector": {
+                        "matchLabels": {"seaweedfs-trust-bundle": "enabled"}
+                    },
+                },
+            },
+            opts=child_opts,
+        )
+
+        self.seaweedfs = Chart(
+            "seaweedfs",
+            namespace=self.seaweedfs_ns.metadata.name,
+            chart="seaweedfs",
+            version=SoftwareVersion.SEAWEEDFS.value,
+            repository_opts=RepositoryOptsArgs(
+                repo="https://seaweedfs.github.io/seaweedfs/helm",
+            ),
+            values={
+                "global": {
+                    "enableSecurity": True,
+                },
+                "master": {
+                    "replicas": 1,
+                    "volumeSizeLimitMB": 30000,
+                    "storageClass": args.storage_classes.encrypted_storage_class.metadata.name,
+                },
+                "volume": {
+                    "replicas": 1,
+                    "storageClass": args.storage_classes.encrypted_storage_class.metadata.name,
+                },
+                "filer": {
+                    "replicas": 1,
+                    "storageClass": args.storage_classes.encrypted_storage_class.metadata.name,
+                    "s3": {
+                        "enabled": True,
+                        "existingConfigSecret": seaweedfs_s3_secret.metadata.name,
+                        "tls": {
+                            "enabled": True,
+                            "existingSecret": "seaweedfs-tls",
+                        },
+                    },
+                },
+            },
+            opts=ResourceOptions.merge(
+                child_opts,
+                ResourceOptions(
+                    depends_on=[
+                        seaweedfs_s3_secret,
+                        self.seaweedfs_certificate,
+                        self.seaweedfs_ns,
+                    ]
+                ),
+            ),
+        )
+
+        self.register_outputs(
+            {
+                "seaweedfs": self.seaweedfs,
+                "seaweedfs_ns": self.seaweedfs_ns,
+                "seaweedfs_s3_secret": seaweedfs_s3_secret,
+            }
+        )
