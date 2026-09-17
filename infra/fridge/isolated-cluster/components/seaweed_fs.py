@@ -129,29 +129,40 @@ class SeaweedFs(ComponentResource):
                 repo="https://seaweedfs.github.io/seaweedfs/helm",
             ),
             values={
-                "global": {
-                    "enableSecurity": True,
-                },
                 "master": {
                     "replicas": 1,
-                    "volumeSizeLimitMB": 30000,
+                    "type": "persistentVolumeClaim",
+                    "size": "1Gi",
                     "storageClass": args.storage_classes.encrypted_storage_class.metadata.name,
                 },
                 "volume": {
                     "replicas": 1,
-                    "storageClass": args.storage_classes.encrypted_storage_class.metadata.name,
+                    "dataDirs": [
+                        {
+                            "name": "data",
+                            "type": "persistentVolumeClaim",
+                            "storageClass": args.storage_classes.encrypted_storage_class.metadata.name,
+                            "size": "50Gi",
+                            "maxVolumes": 0,
+                        }
+                    ],
                 },
                 "filer": {
                     "replicas": 1,
-                    "storageClass": args.storage_classes.encrypted_storage_class.metadata.name,
-                    "s3": {
-                        "enabled": True,
-                        "existingConfigSecret": seaweedfs_s3_secret.metadata.name,
-                        "tls": {
-                            "enabled": True,
-                            "existingSecret": "seaweedfs-tls",
-                        },
+                    "data": {
+                        "type": "persistentVolumeClaim",
+                        "size": "5Gi",
+                        "storageClass": args.storage_classes.encrypted_storage_class.metadata.name,
                     },
+                },
+                "s3": {
+                    "enabled": True,
+                    "existingConfigSecret": seaweedfs_s3_secret.metadata.name,
+                    "tlsSecret": "seaweedfs-tls",
+                    "createBuckets": [
+                        {"name": "ingress", "anonymousRead": False},
+                        {"name": "egress", "anonymousRead": True},
+                    ],
                 },
             },
             opts=ResourceOptions.merge(
