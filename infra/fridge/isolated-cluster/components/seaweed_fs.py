@@ -67,7 +67,7 @@ class SeaweedFs(ComponentResource):
             ),
             type="Opaque",
             string_data={
-                "config.json": seaweedfs_s3_config,
+                "seaweedfs_s3_config": seaweedfs_s3_config,
             },
             opts=ResourceOptions.merge(
                 child_opts,
@@ -99,27 +99,6 @@ class SeaweedFs(ComponentResource):
             ),
         )
 
-        self.seaweedfs_trust_bundle = CustomResource(
-            "seaweedfs-trust-bundle",
-            api_version="trust.cert-manager.io/v1alpha1",
-            kind="Bundle",
-            metadata=ObjectMetaArgs(
-                name="operator-ca-tls-seaweedfs",
-            ),
-            spec={
-                "sources": [
-                    {"secret": {"name": "dev-certificate", "key": "ca.crt"}},
-                ],
-                "target": {
-                    "secret": {"key": "ca.crt"},
-                    "namespaceSelector": {
-                        "matchLabels": {"seaweedfs-trust-bundle": "enabled"}
-                    },
-                },
-            },
-            opts=child_opts,
-        )
-
         self.seaweedfs = Chart(
             "seaweedfs",
             namespace=self.seaweedfs_ns.metadata.name,
@@ -131,9 +110,36 @@ class SeaweedFs(ComponentResource):
             values={
                 "master": {
                     "replicas": 1,
-                    "type": "persistentVolumeClaim",
-                    "size": "1Gi",
-                    "storageClass": args.storage_classes.encrypted_storage_class.metadata.name,
+                    "data": {
+                        "type": "persistentVolumeClaim",
+                        "size": "1Gi",
+                        "storageClass": args.storage_classes.encrypted_storage_class.metadata.name,
+                    },
+                    "logs": {
+                        "type": "emptyDir",
+                    },
+                    "podSecurityContext": {
+                        "enabled": True,
+                        "fsGroup": 1000,
+                        "runAsUser": 1000,
+                        "runAsGroup": 1000,
+                        "runAsNonRoot": True,
+                        "seccompProfile": {
+                            "type": "RuntimeDefault",
+                        },
+                    },
+                    "containerSecurityContext": {
+                        "enabled": True,
+                        "fsGroup": 1000,
+                        "runAsUser": 1000,
+                        "runAsGroup": 1000,
+                        "runAsNonRoot": True,
+                        "allowPrivilegeEscalation": False,
+                        "capabilities": {"drop": ["ALL"]},
+                        "seccompProfile": {
+                            "type": "RuntimeDefault",
+                        },
+                    },
                 },
                 "volume": {
                     "replicas": 1,
@@ -146,23 +152,99 @@ class SeaweedFs(ComponentResource):
                             "maxVolumes": 0,
                         }
                     ],
+                    "logs": {
+                        "type": "emptyDir",
+                    },
+                    "podSecurityContext": {
+                        "enabled": True,
+                        "fsGroup": 1000,
+                        "runAsUser": 1000,
+                        "runAsGroup": 1000,
+                        "runAsNonRoot": True,
+                        "seccompProfile": {
+                            "type": "RuntimeDefault",
+                        },
+                    },
+                    "containerSecurityContext": {
+                        "enabled": True,
+                        "fsGroup": 1000,
+                        "runAsUser": 1000,
+                        "runAsGroup": 1000,
+                        "runAsNonRoot": True,
+                        "allowPrivilegeEscalation": False,
+                        "capabilities": {"drop": ["ALL"]},
+                        "seccompProfile": {
+                            "type": "RuntimeDefault",
+                        },
+                    },
                 },
                 "filer": {
                     "replicas": 1,
+                    "logs": {
+                        "type": "emptyDir",
+                    },
                     "data": {
                         "type": "persistentVolumeClaim",
                         "size": "5Gi",
                         "storageClass": args.storage_classes.encrypted_storage_class.metadata.name,
                     },
+                    "podSecurityContext": {
+                        "enabled": True,
+                        "fsGroup": 1000,
+                        "runAsUser": 1000,
+                        "runAsGroup": 1000,
+                        "runAsNonRoot": True,
+                        "seccompProfile": {
+                            "type": "RuntimeDefault",
+                        },
+                    },
+                    "containerSecurityContext": {
+                        "enabled": True,
+                        "fsGroup": 1000,
+                        "runAsUser": 1000,
+                        "runAsGroup": 1000,
+                        "runAsNonRoot": True,
+                        "allowPrivilegeEscalation": False,
+                        "capabilities": {"drop": ["ALL"]},
+                        "seccompProfile": {
+                            "type": "RuntimeDefault",
+                        },
+                    },
                 },
                 "s3": {
                     "enabled": True,
+                    "replicas": 1,
+                    "logs": {
+                        "type": "emptyDir",
+                    },
                     "existingConfigSecret": seaweedfs_s3_secret.metadata.name,
                     "tlsSecret": "seaweedfs-tls",
                     "createBuckets": [
                         {"name": "ingress", "anonymousRead": False},
                         {"name": "egress", "anonymousRead": True},
                     ],
+                    "podSecurityContext": {
+                        "enabled": True,
+                        "fsGroup": 1000,
+                        "runAsUser": 1000,
+                        "runAsGroup": 1000,
+                        "runAsNonRoot": True,
+                        "seccompProfile": {
+                            "type": "RuntimeDefault",
+                        },
+                    },
+                    "containerSecurityContext": {
+                        "enabled": True,
+                        "fsGroup": 1000,
+                        "runAsUser": 1000,
+                        "runAsGroup": 1000,
+                        "runAsNonRoot": True,
+                        "allowPrivilegeEscalation": False,
+                        "capabilities": {"drop": ["ALL"]},
+                        "seccompProfile": {
+                            "type": "RuntimeDefault",
+                        },
+                    },
                 },
             },
             opts=ResourceOptions.merge(
