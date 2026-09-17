@@ -38,4 +38,5 @@ class SoftwareVersion(Enum):
     MINIO_OPERATOR = "7.1.1"
     MINIO_TENANT = "7.1.1"
     NODE_FEATURE_DISCOVERY = "0.18.3"
+    SEAWEEDFS = "4.47.0"
     TRUST_MANAGER = "0.21.1"
