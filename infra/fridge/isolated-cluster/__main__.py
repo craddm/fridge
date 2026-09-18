@@ -117,6 +117,23 @@ minio_config = components.MinioConfigJob(
     ),
 )
 
+# SeaweedFS
+
+seaweed_fs = components.SeaweedFs(
+    "seaweedfs",
+    args=components.SeaweedFsArgs(
+        config=config,
+        cluster_issuer=cert_manager.cert_manager_dev_issuer,
+        storage_classes=storage_classes,
+    ),
+    opts=ResourceOptions(
+        depends_on=[
+            cert_manager,
+            storage_classes,
+        ]
+    ),
+)
+
 
 # Argo Workflows
 argo_workflows = components.WorkflowServer(
