@@ -50,32 +50,24 @@ class GPUOperator(ComponentResource):
 
         if args.k8s_environment == K8sEnvironment.DAWN:
 
-            self.intel_node_feature_rules = ConfigFile(
-                "intel-node-feature-rules",
-                file="https://raw.githubusercontent.com/intel/intel-device-plugins-for-kubernetes/main/deployments/nfd/overlays/node-feature-rules/node-feature-rules.yaml",
-                opts=ResourceOptions.merge(
-                    child_opts, ResourceOptions(depends_on=self.node_feature_discovery)
-                ),
-            )
-
             self.gpu_operator_ns = Namespace(
                 "gpu-operator-ns",
                 metadata=ObjectMetaArgs(
-                    name="intel-device-plugins",
+                    name="amd-device-plugins",
                 ),
                 opts=child_opts,
             )
 
-            # Deploy the Intel GPU Operator using the official Helm chart
+            # Deploy the AMD GPU Operator using the official Helm chart
             self.gpu_operator = Release(
-                "intel-gpu-operator",
+                "amd-gpu-operator",
                 ReleaseArgs(
-                    name="intel-gpu-operator",
+                    name="amd-gpu-operator",
                     namespace=self.gpu_operator_ns.metadata.name,
-                    chart="intel-device-plugins-operator",
-                    version=SoftwareVersion.INTEL_GPU_OPERATOR.value,
+                    chart="amd-gpu-operator",
+                    version=SoftwareVersion.AMD_GPU_OPERATOR.value,
                     repository_opts=RepositoryOptsArgs(
-                        repo="https://intel.github.io/helm-charts/",
+                        repo="https://rocm.github.io/gpu-operator",
                     ),
                     values={
                         "tolerations": [
@@ -89,13 +81,5 @@ class GPUOperator(ComponentResource):
                 ),
                 opts=ResourceOptions.merge(
                     child_opts, ResourceOptions(depends_on=self.node_feature_discovery)
-                ),
-            )
-
-            self.gpu_device = ConfigFile(
-                "gpu-device",
-                file="./k8s/gpu_operator/intel-gpu-device.yaml",
-                opts=ResourceOptions.merge(
-                    child_opts, ResourceOptions(depends_on=self.gpu_operator)
                 ),
             )
