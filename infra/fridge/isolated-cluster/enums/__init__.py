@@ -29,13 +29,32 @@ tls_issuer_names = {
 
 
 class SoftwareVersion(Enum):
+    # renovate: datasource=helm depName=argo-workflows registryUrl=https://argoproj.github.io/argo-helm
     ARGO_WORKFLOWS = "2.0.6"  # Corresponds to Argo Workflows v4.1.3
+
+    # renovate: datasource=helm depName=cert-manager/cert-manager registryUrl=https://charts.jetstack.io
     CERT_MANAGER = "1.17.1"
+
+    # renovate: datasource=docker depName=curl/curl
     CURL = "8.22.0"
+
+    # renovate: datasource=docker depName=ghcr.io/alan-turing-institute/fridge
     FRIDGE_API = "0.7.0"
+
+    # renovate: datasource=docker depName=haproxy
     HAPROXY = "3.4.6"
+
+    # renovate: datasource=helm depName=intel-device-plugins-for-kubernetes registryUrl=https://intel.github.io/helm-charts
     INTEL_GPU_OPERATOR = "0.35.0"
+
+    # renovate: datasource=helm depName=longhorn/longhorn registryUrl=https://charts.longhorn.io
     LONGHORN = "1.9.0"
+
+    # renovate: datasource=helm depName=node-feature-discovery registryUrl=https://kubernetes-sigs.github.io/node-feature-discovery/charts
     NODE_FEATURE_DISCOVERY = "0.18.3"
+
+    # renovate: datasource=helm depName=seaweedfs/seaweedfs registryUrl=https://seaweedfs.github.io/seaweedfs/helm
     SEAWEEDFS = "4.47.0"
+
+    # renovate: datasource=helm depName=cert-manager/trust-manager registryUrl=https://charts.jetstack.io
     TRUST_MANAGER = "0.21.1"

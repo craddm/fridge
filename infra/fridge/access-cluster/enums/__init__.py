@@ -33,7 +33,7 @@ tls_issuer_names = {
 # But in some cases (e.g. curl-jq) no numbered version tags are available.
 @unique
 class SoftwareVersion(Enum):
-    # renovate: datasource=github-releases depName=cert-manager/cert-manager versioning=loose
+    # renovate: datasource=helm depName=cert-manager/cert-manager registryUrl=https://charts.jetstack.io
     CERT_MANAGER = "1.19.4"
     # NOTE: renovate does not track images marked as "latest"
     CURL_JQ = "latest"
@@ -41,9 +41,9 @@ class SoftwareVersion(Enum):
     HAPROXY = "3.4.6"
     # renovate: datasource=helm depName=harbor registryUrl=https://goharbor.io
     HARBOR = "1.17.1"
-    # renovate: datasource=github-releases depName=kubernetes/ingress-nginx
+    # renovate: datasource=helm depName=ingress-nginx registryUrl=https://kubernetes.github.io/ingress-nginx
     INGRESS_NGINX = "4.13.2"
-    # renovate: datasource=github-releases depName=longhorn/longhorn
+    # renovate: datasource=helm depName=longhorn/longhorn registryUrl=https://charts.longhorn.io
     LONGHORN = "1.9.0"
-    # renovate: datasource=github-releases depName=netbirdio/netbird
+    # renovate: datasource=docker depName=netbirdio/netbird
     NETBIRD = "0.80.0"
