@@ -1,0 +1,8 @@
+name: Renovate
+on:
+  workflow_dispatch:
+jobs:
+  dummy:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Clickable wrapper"
