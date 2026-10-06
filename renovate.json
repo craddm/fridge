@@ -1,0 +1,40 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": [
+        "config:recommended"
+    ],
+    "lockFileMaintenance": {
+        "enabled": true
+    },
+    "customManagers": [
+        {
+            "customType": "regex",
+            "fileMatch": [
+                "^infra/fridge/access-cluster/enums/init\\.py$",
+                "^infra/fridge/isolated-cluster/enums/init\\.py$"
+            ],
+            "matchStrings": [
+                "# renovate: datasource=(?<datasource>[a-z-A-Z0-9_-]+) depName=(?<depName>[^\\s]+)\\s+[A-Za-z0-9_]+\\s*=\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?"
+            ]
+        }
+    ],
+    "packageRules": [
+        {
+            "matchPaths": [
+                "fridge-job-api/**"
+            ],
+            "matchManagers": [
+                "pep621"
+            ],
+            "groupName": "FRIDGE API Python Dependencies",
+            "groupSlug": "fridge-job-api-python"
+        },
+        {
+            "matchManagers": [
+                "custom.regex"
+            ],
+            "groupName": "FRIDGE K8s Stack",
+            "groupSlug": "fridge-k8s-stack"
+        }
+    ]
+}
