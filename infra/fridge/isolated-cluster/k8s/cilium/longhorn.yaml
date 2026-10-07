@@ -316,3 +316,16 @@ spec:
         - ports:
             - port: "9500"
               protocol: TCP
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: longhorn-pre-upgrade
+  namespace: longhorn-system
+spec:
+  endpointSelector:
+    matchLabels:
+      job-name: longhorn-pre-upgrade
+  egress:
+    - toEntities:
+        - kube-apiserver
