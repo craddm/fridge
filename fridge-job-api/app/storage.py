@@ -242,7 +242,7 @@ def abort_multipart_upload(
 
 
 @router.get("/object/{bucket}/{file_name:path}", tags=["s3"])
-async def get_object(
+def get_object(
     bucket: Bucket,
     file_name: str,
     target_file: str | None = None,
@@ -255,7 +255,7 @@ async def get_object(
 
 
 @router.get("/object/list", tags=["s3"])
-async def list_objects(
+def list_objects(
     bucket: Annotated[str, Query(pattern=BUCKET_PATTERN)] = "ingress",
     prefix: str | None = None,
     recursive: bool = False,
@@ -269,7 +269,7 @@ async def list_objects(
 
 # Trigger Argo workflow
 @router.post("/object/move", tags=["s3"])
-async def move_object(
+def move_object(
     files: Annotated[
         str, "The name of files to move (Separate with ; for multiple files)"
     ],
@@ -346,7 +346,7 @@ async def move_object(
 
 
 @router.post("/object/bucket", tags=["s3"])
-async def create_bucket(
+def create_bucket(
     bucket_name: Annotated[str, Query(pattern=BUCKET_PATTERN)],
     verified: Annotated[bool, "Verify the request with basic auth"] = Depends(
         verify_request
@@ -358,7 +358,7 @@ async def create_bucket(
 
 
 @router.delete("/object/{bucket}/{file_name:path}", tags=["s3"])
-async def delete_object(
+def delete_object(
     bucket: Bucket,
     file_name: str,
     verified: Annotated[bool, "Verify the request with basic auth"] = Depends(

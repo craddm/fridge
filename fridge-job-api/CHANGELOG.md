@@ -6,6 +6,7 @@
 - `/object/{bucket}/upload` rejects file names that are absolute or contain `..`
 - New multipart upload endpoints under `/uploads/{bucket}` for large files: the client sends the file in numbered parts, in parallel if it likes, and can resume an interrupted upload by listing the parts already uploaded and sending the rest. Objects can be up to 2.5TiB
 - Added `examples/upload.py`, an example client for the multipart upload endpoints
+- Endpoints that make blocking calls to Argo or S3, and the readiness probe, now run in a thread pool, so they no longer hold up other requests (such as uploads in progress) while they wait
 
 ## [0.8.0]
 
