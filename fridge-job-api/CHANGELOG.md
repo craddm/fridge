@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.0]
+
+- `/object/{bucket}/upload` streams the file to S3 as it arrives, instead of saving the whole request to disk before the upload to S3 starts. Files over 16MB are sent to S3 as a multipart upload with several parts in parallel, and smaller files in a single request
+- `/object/{bucket}/upload` rejects file names that are absolute or contain `..`
+- New multipart upload endpoints under `/uploads/{bucket}` for large files: the client sends the file in numbered parts, in parallel if it likes, and can resume an interrupted upload by listing the parts already uploaded and sending the rest. Objects can be up to 2.5TiB
+- Added `examples/upload.py`, an example client for the multipart upload endpoints
+
 ## [0.8.0]
 
 - Object endpoints (`upload`, `get`, `list`, `delete`, `/object/move`) accept the caller's own S3 credentials in the optional `X-S3-Access-Key` and `X-S3-Secret-Key` headers, so S3 enforces what they may do (e.g. that only the owner can use a user-specific bucket). If omitted, the API's generic S3 credentials are used. This is for potential future enablement of user-specific buckets.
