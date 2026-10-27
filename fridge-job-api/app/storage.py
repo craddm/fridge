@@ -1,7 +1,8 @@
 import json
 import re
 import requests
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
+from starlette.concurrency import run_in_threadpool
 from typing import Annotated, Literal
 from .config import (
     argo_token,
@@ -14,11 +15,13 @@ from .config import (
     verify_request,
     VERIFY_TLS,
 )
-from .s3_client import S3Client
+from .multipart_stream import MultipartFileStream
+from .s3_client import MAX_PART_COUNT, MAX_PART_SIZE, S3Client
 
 # S3 bucket naming rules: 3-63 characters, lowercase letters, numbers, dots and hyphens
 BUCKET_PATTERN = r"^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$"
 Bucket = Annotated[str, Path(pattern=BUCKET_PATTERN)]
+PartNumber = Annotated[int, Path(ge=1, le=MAX_PART_COUNT)]
 
 router = APIRouter(tags=["s3"])
 
@@ -44,16 +47,198 @@ def s3_for_bucket(bucket: str, credentials: tuple[str | None, str | None]) -> S3
     return caller_s3_client(access_key, secret_key)
 
 
-@router.post("/object/{bucket}/upload", tags=["s3"])
+def object_key(
+    key: Annotated[str, Query(min_length=1, description="Name of the object")],
+) -> str:
+    if key.startswith("/") or ".." in key.split("/"):
+        raise HTTPException(
+            status_code=422,
+            detail="Object names must be relative and must not contain '..'.",
+        )
+    return key
+
+
+# The file is read from the request body as it arrives rather than through an UploadFile
+# parameter, which would spool the whole body to disk before the upload to S3 could start.
+# The request body is described here so that it still appears in the OpenAPI docs.
+@router.post(
+    "/object/{bucket}/upload",
+    tags=["s3"],
+    openapi_extra={
+        "requestBody": {
+            "required": True,
+            "content": {
+                "multipart/form-data": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {"file": {"type": "string", "format": "binary"}},
+                        "required": ["file"],
+                    }
+                }
+            },
+        }
+    },
+)
 async def upload_object(
     bucket: Bucket,
-    file: UploadFile,
+    request: Request,
     verified: Annotated[bool, "Verify the request with basic auth"] = Depends(
         verify_request
     ),
     credentials: tuple = Depends(s3_credentials),
 ):
-    return await s3_for_bucket(bucket, credentials).put_object(bucket, file)
+    """
+    Upload a file in a single request. For large files, use the multipart upload endpoints
+    under `/uploads/{bucket}`, which can send parts in parallel and resume after an interruption.
+    """
+    s3 = s3_for_bucket(bucket, credentials)
+    form = MultipartFileStream(request)
+    await form.open()
+    content_length = request.headers.get("content-length")
+    return await s3.put_object(
+        bucket,
+        object_key(form.filename),
+        form.content_type,
+        form.chunks(),
+        size=int(content_length)
+        if content_length and content_length.isdigit()
+        else None,
+    )
+
+
+# Multipart uploads, for large files. The client starts an upload, sends the file in numbered
+# parts (in parallel if it likes), and completes it. S3 keeps the parts it has received, so an
+# interrupted upload can be resumed by listing the parts and sending only those missing.
+@router.post("/uploads/{bucket}", tags=["s3"])
+def create_multipart_upload(
+    bucket: Bucket,
+    key: Annotated[str, Depends(object_key)],
+    size: Annotated[
+        int | None,
+        Query(
+            ge=0, description="Size of the file in bytes, used to choose the part size"
+        ),
+    ] = None,
+    content_type: Annotated[
+        str | None, Query(description="Content type of the object")
+    ] = None,
+    verified: Annotated[bool, "Verify the request with basic auth"] = Depends(
+        verify_request
+    ),
+    credentials: tuple = Depends(s3_credentials),
+):
+    """
+    Start a multipart upload. Returns the `upload_id` and the `part_size` to split the file
+    into. Every part except the last must be exactly `part_size` bytes.
+    """
+    return s3_for_bucket(bucket, credentials).create_multipart_upload(
+        bucket, key, content_type, size
+    )
+
+
+@router.put(
+    "/uploads/{bucket}/{upload_id}/{part_number}",
+    tags=["s3"],
+    openapi_extra={
+        "requestBody": {
+            "required": True,
+            "content": {
+                "application/octet-stream": {
+                    "schema": {"type": "string", "format": "binary"}
+                }
+            },
+        }
+    },
+)
+async def upload_part(
+    bucket: Bucket,
+    upload_id: str,
+    part_number: PartNumber,
+    key: Annotated[str, Depends(object_key)],
+    request: Request,
+    verified: Annotated[bool, "Verify the request with basic auth"] = Depends(
+        verify_request
+    ),
+    credentials: tuple = Depends(s3_credentials),
+):
+    """
+    Upload one part of a multipart upload, as the raw request body. Sending a part number
+    again replaces that part.
+    """
+    body = bytearray()
+    async for chunk in request.stream():
+        body += chunk
+        if len(body) > MAX_PART_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Parts must be at most {MAX_PART_SIZE} bytes.",
+            )
+    # Run in a thread so that the event loop can take other parts while this one is sent
+    return await run_in_threadpool(
+        s3_for_bucket(bucket, credentials).upload_part,
+        bucket,
+        key,
+        upload_id,
+        part_number,
+        bytes(body),
+    )
+
+
+@router.get("/uploads/{bucket}/{upload_id}", tags=["s3"])
+def list_parts(
+    bucket: Bucket,
+    upload_id: str,
+    key: Annotated[str, Depends(object_key)],
+    verified: Annotated[bool, "Verify the request with basic auth"] = Depends(
+        verify_request
+    ),
+    credentials: tuple = Depends(s3_credentials),
+):
+    """List the parts already uploaded, to resume an interrupted upload."""
+    return s3_for_bucket(bucket, credentials).list_parts(bucket, key, upload_id)
+
+
+@router.post("/uploads/{bucket}/{upload_id}/complete", tags=["s3"])
+def complete_multipart_upload(
+    bucket: Bucket,
+    upload_id: str,
+    key: Annotated[str, Depends(object_key)],
+    part_count: Annotated[
+        int,
+        Query(
+            ge=1,
+            le=MAX_PART_COUNT,
+            description="Number of parts the file was split into",
+        ),
+    ],
+    verified: Annotated[bool, "Verify the request with basic auth"] = Depends(
+        verify_request
+    ),
+    credentials: tuple = Depends(s3_credentials),
+):
+    """
+    Join the uploaded parts into the final object. Fails, leaving the upload open, unless
+    exactly parts 1 to `part_count` have been uploaded.
+    """
+    return s3_for_bucket(bucket, credentials).complete_multipart_upload(
+        bucket, key, upload_id, part_count
+    )
+
+
+@router.delete("/uploads/{bucket}/{upload_id}", tags=["s3"])
+def abort_multipart_upload(
+    bucket: Bucket,
+    upload_id: str,
+    key: Annotated[str, Depends(object_key)],
+    verified: Annotated[bool, "Verify the request with basic auth"] = Depends(
+        verify_request
+    ),
+    credentials: tuple = Depends(s3_credentials),
+):
+    """Abandon a multipart upload and discard the parts already uploaded."""
+    return s3_for_bucket(bucket, credentials).abort_multipart_upload(
+        bucket, key, upload_id
+    )
 
 
 @router.get("/object/{bucket}/{file_name:path}", tags=["s3"])
