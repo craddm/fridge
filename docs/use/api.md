@@ -127,6 +127,31 @@ curl -k -u "$FRIDGE_AUTH" \
 {"status": 201, "response": "input.csv"}
 ```
 
+#### Large files
+
+For large files, use the multipart upload endpoints under `/uploads/{bucket}` instead.
+The file is sent in numbered parts, which can be sent several at a time, and an interrupted upload can be resumed by sending only the parts that are missing.
+
+1. Start the upload with `POST /uploads/{bucket}?key=<name>&size=<bytes>`.
+   This returns an `upload_id` and a `part_size`.
+2. Split the file into parts of `part_size` bytes (the last part may be smaller), numbered from 1.
+   Send each part as the raw request body of `PUT /uploads/{bucket}/{upload_id}/{part_number}?key=<name>`.
+   Sending a part again replaces it.
+3. To resume, list the parts already uploaded with `GET /uploads/{bucket}/{upload_id}?key=<name>`, and send the rest.
+4. Finish with `POST /uploads/{bucket}/{upload_id}/complete?key=<name>&part_count=<parts>`.
+   This fails, leaving the upload open, unless exactly parts 1 to `part_count` have been uploaded.
+
+To abandon an upload and discard its parts, use `DELETE /uploads/{bucket}/{upload_id}?key=<name>`.
+Objects can be up to 2.5 TiB.
+
+`fridge-job-api/examples/upload.py` in the FRIDGE repository is an example client that does all of this, and resumes an interrupted upload when it is run again:
+
+```console
+python upload.py data.tar --bucket ingress
+```
+
+It reads the API address and credentials from `FRIDGE_URL` and `FRIDGE_AUTH`.
+
 List what is in a bucket with:
 
 ```console
@@ -323,6 +348,11 @@ Data in other buckets can be copied onto the volume with `/object/move`, but res
 | `GET` | `/workflowtemplates/{namespace}/{template_name}` | Get one workflow template |
 | `POST` | `/workflowevents/from_template/` | Submit a workflow from a template |
 | `POST` | `/object/{bucket}/upload` | Upload a file (multipart form field `file`) |
+| `POST` | `/uploads/{bucket}` | Start a multipart upload of a large file |
+| `PUT` | `/uploads/{bucket}/{upload_id}/{part_number}` | Upload one part |
+| `GET` | `/uploads/{bucket}/{upload_id}` | List the parts already uploaded |
+| `POST` | `/uploads/{bucket}/{upload_id}/complete` | Finish a multipart upload |
+| `DELETE` | `/uploads/{bucket}/{upload_id}` | Abandon a multipart upload |
 | `GET` | `/object/{bucket}/{file_name}` | Download an object |
 | `GET` | `/object/list` | List objects in a bucket |
 | `POST` | `/object/move` | Copy files between a bucket and the shared volume |
@@ -330,15 +360,19 @@ Data in other buckets can be copied onto the volume with `/object/move`, but res
 | `DELETE` | `/object/{bucket}/{file_name}` | Delete an object |
 
 `{file_name}` may contain `/`.
-All of the `/object` endpoints accept the optional `X-S3-Access-Key` and `X-S3-Secret-Key` headers described in [S3 credentials](#use-api-s3-credentials).
+The `/uploads` endpoints take the object's name in the `key` query parameter.
+All of the `/object` and `/uploads` endpoints accept the optional `X-S3-Access-Key` and `X-S3-Secret-Key` headers described in [S3 credentials](#use-api-s3-credentials).
 
 ## Errors
 
 | Status | Meaning |
 |---|---|
+| `400` | A malformed upload, for example a request body that ends partway through the file |
 | `401` | Missing or incorrect credentials, or only one of the two S3 credential headers was sent. Also returned by `/object/bucket` when no S3 credentials are sent |
 | `403` | The object storage refused access, for example downloading from `ingress` with the generic identity |
-| `404` | The bucket, object, workflow or workflow template does not exist |
+| `404` | The bucket, object, multipart upload, workflow or workflow template does not exist |
+| `409` | A multipart upload was completed with parts missing |
+| `413` | A multipart upload part, or the file, is too large |
 | `422` | Invalid request, for example an invalid bucket name, an absolute or `..` file path, or an empty file list |
 | `500` | Another error, for example an upload that failed. The `detail` field gives the reason |
 
