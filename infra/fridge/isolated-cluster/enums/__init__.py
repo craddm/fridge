@@ -34,31 +34,31 @@ class SoftwareVersion(Enum):
     AMD_GPU_OPERATOR = "1.5.1"
 
     # renovate: datasource=helm depName=argo-workflows registryUrl=https://argoproj.github.io/argo-helm
-    ARGO_WORKFLOWS = "2.0.6"  # Corresponds to Argo Workflows v4.1.3
+    ARGO_WORKFLOWS = "2.0.18"  # Corresponds to Argo Workflows v4.1.3
 
     # renovate: datasource=helm depName=cert-manager registryUrl=https://charts.jetstack.io
-    CERT_MANAGER = "1.21.2"
+    CERT_MANAGER = "v1.21.3"
 
     # renovate: datasource=docker depName=curlimages/curl
-    CURL = "8.22.0"
+    CURL = "8.23.0"
 
     # renovate: datasource=docker depName=ghcr.io/alan-turing-institute/fridge
     FRIDGE_API = "0.9.0"
 
     # renovate: datasource=docker depName=haproxy
-    HAPROXY = "3.4.6"
+    HAPROXY = "3.4.8"
 
     # renovate: datasource=helm depName=intel-device-plugins-operator registryUrl=https://intel.github.io/helm-charts
-    INTEL_GPU_OPERATOR = "0.35.0"
+    INTEL_GPU_OPERATOR = "0.37.1"
 
     # renovate: datasource=helm depName=longhorn registryUrl=https://charts.longhorn.io
-    LONGHORN = "1.9.0"
+    LONGHORN = "1.13.0"
 
     # renovate: datasource=helm depName=node-feature-discovery registryUrl=https://kubernetes-sigs.github.io/node-feature-discovery/charts
-    NODE_FEATURE_DISCOVERY = "0.18.3"
+    NODE_FEATURE_DISCOVERY = "0.20.1"
 
     # renovate: datasource=helm depName=seaweedfs registryUrl=https://seaweedfs.github.io/seaweedfs/helm
-    SEAWEEDFS = "4.51.0"
+    SEAWEEDFS = "4.54.0"
 
     # renovate: datasource=helm depName=trust-manager registryUrl=https://charts.jetstack.io
-    TRUST_MANAGER = "0.25.0"
+    TRUST_MANAGER = "v0.26.0"
