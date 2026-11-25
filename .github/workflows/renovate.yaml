@@ -50,7 +50,7 @@ jobs:
           configurationFile: renovate.json
           # Pinned Renovate version, "full" image variant (includes the
           # language tools needed for lock file updates).
-          renovate-version: 44.262.1-full
+          renovate-version: 44.263.0-full
           token: ${{ steps.app-token.outputs.token }}
         env:
           RENOVATE_REPOSITORIES: ${{ github.repository }}
