@@ -12,7 +12,7 @@ RUN uv sync --locked --no-editable
 # --mount=type=cache,target=/root/.cache/uv \
 
 # Place executables in the environment at the front of the path
-FROM python:3.13-slim-bookworm
+FROM python:3.15-slim-bookworm
 RUN groupadd -g 1001 appuser && useradd -m -u 1001 -g appuser appuser
 WORKDIR /app
 COPY --from=builder --chown=appuser:appuser /app /app
